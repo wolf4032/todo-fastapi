@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# 各種ツールのキャッシュ
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# 環境変数ファイル（パスワード等を含むためコミットしない）
+# .env.example はテンプレートなので例外として追跡する
+.env
+.env.*
+!.env.example
+
+# VS Code
+# 個人設定は無視しつつ、プロジェクトの開発環境定義にあたる4ファイルだけは追跡する
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+
+# macOS
+.DS_Store
