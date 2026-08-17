@@ -1,0 +1,52 @@
+// Dev Container の設定。VS Code はこれを読んで「どのコンテナに、どんな状態で接続するか」を決める。
+// 拡張子は .json だが、Dev Container 仕様ではコメントを書ける（JSONC）。
+// → docs/notes/step-02-devcontainer.md
+{
+  "name": "todo-fastapi",
+
+  // 独自 Dockerfile を直接指さず compose 経由にすることで、
+  // 後で追加する db や api と同じネットワーク上に並べられる。
+  "dockerComposeFile": ["../compose.yaml", "../compose.override.yaml"],
+  "service": "devtools",
+
+  // compose.override.yaml の bind mount 先と一致させる必要がある。
+  "workspaceFolder": "/workspaces/todo-fastapi",
+
+  "remoteUser": "vscode",
+
+  // Claude Code をコンテナ内にインストールする（CLI と VS Code 拡張の両方）。
+  // タグの :1.0 は Feature のインストールスクリプトのバージョンで、Claude Code 本体ではない。
+  //
+  // node は Claude Code が npm 経由で入るため必須。claude-code Feature は Node が無ければ
+  // 自前で入れようとするが、Debian 系では nodejs と npm がパッケージとして分かれており
+  // npm が入らずに失敗する。そのため Node は Feature として明示的に指定する。
+  // 将来フロントエンドを足すときも、この Node をそのまま使う。
+  //
+  // いずれも開発ツールボックス側の話なので、本番イメージには一切影響しない。
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+
+  // ホストのユーザー UID に合わせてコンテナ内 vscode の UID を書き換える。
+  // bind mount したファイルの所有者ズレ（git の dubious ownership）を防ぐ根本対策。
+  "updateRemoteUserUID": true,
+
+  // 上記でも所有者判定が食い違う環境があるための保険（CVE-2022-24765 の所有者チェック）。
+  // 書き換わるのはコンテナ内の設定のみで、ホストの ~/.gitconfig には影響しない。
+  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+
+  "customizations": {
+    "vscode": {
+      // 開発環境の定義をリポジトリに残すため、拡張機能もここで指定する。
+      // エディタ体験の仕上げ（フォーマッタ設定など）は Step 10 で行う。
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml"
+      ]
+    }
+  }
+}

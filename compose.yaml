@@ -1,0 +1,9 @@
+# 全環境で共通の定義。
+# compose.override.yaml（開発差分・自動で読まれる）と
+# compose.prod.yaml（本番相当・-f で明示指定）を重ねて使う。
+# → docs/notes/step-02-devcontainer.md
+name: todo-fastapi
+
+# db と api は Step 3 以降で追加する。
+# 開発専用の devtools は本番の構成に混ぜたくないので compose.override.yaml 側に置く。
+services: {}

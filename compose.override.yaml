@@ -1,0 +1,27 @@
+# 開発時だけの差分。この名前なら docker compose が自動で読み込み、compose.yaml にマージする。
+services:
+  # VS Code (Dev Container) が接続する開発用ツールボックス。
+  # アプリを動かすコンテナではないため、共通定義には置かない。
+  devtools:
+    build:
+      # コンテキストを .devcontainer に絞り、Docker に送るファイルを最小限にする。
+      context: .devcontainer
+      dockerfile: Dockerfile
+    # devtools に常駐プロセスは無いため、これが無いと起動直後に終了してしまう。
+    command: sleep infinity
+    volumes:
+      # .git ごとマウントされるので、コンテナ内でも git がそのまま使える。
+      # マウント先を /workspaces 直下ではなく /workspaces/<リポジトリ名> にするのは
+      # Dev Containers の慣習で、将来別リポジトリを同時に開くときの衝突も避けられる。
+      - .:/workspaces/todo-fastapi
+      # Claude Code の認証情報・設定・セッション履歴の保存先。
+      # コンテナを作り直しても消えないよう名前付きボリュームに載せる。
+      - claude-config:/home/vscode/.claude
+    environment:
+      # ~/.claude.json（OAuth アカウント情報）は既定では ~/.claude の外に置かれるため、
+      # 保存先を明示しないとリビルドのたびに再ログインが必要になる。
+      CLAUDE_CONFIG_DIR: /home/vscode/.claude
+    working_dir: /workspaces/todo-fastapi
+
+volumes:
+  claude-config:
