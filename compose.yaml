@@ -4,6 +4,26 @@
 # → docs/notes/step-02-devcontainer.md
 name: todo-fastapi
 
-# db と api は Step 3 以降で追加する。
+# api は Step 4 で追加する。
 # 開発専用の devtools は本番の構成に混ぜたくないので compose.override.yaml 側に置く。
-services: {}
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      # DB の実データは名前付きボリュームに載せ、コンテナを作り直しても残るようにする。
+      # → docs/notes/topic-docker-volumes.md
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # DB プロセスが起動しているだけでなく、接続を受け付けられる状態かまで確認する。
+      # api を追加する Step 4 で depends_on の condition: service_healthy から使う。
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

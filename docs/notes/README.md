@@ -13,6 +13,7 @@
 |---|---|
 | [Step 1](step-01-git-init.md) | git の初期化、初期ブランチ名のやり直し、設定の優先順位、`.gitignore` の否定パターン、`.editorconfig` |
 | [Step 2](step-02-devcontainer.md) | Dev Container、ツールボックス方式の根拠、git の所有者チェック、`ARG` と `ENV`、Compose のマージ、Claude Code の導入 |
+| [Step 3](step-03-postgres.md) | PostgreSQL、公式イメージの初回限定初期化、healthcheck と `depends_on` の関係、`.env` の変数展開と非コミットの理由 |
 
 ## トピックノート
 
