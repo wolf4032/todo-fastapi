@@ -1,0 +1,7 @@
+# ビルドコンテキスト（backend/）全体に効き、ステージごとには切り替えられない。
+# そのため「本番イメージから tests/ を外す」のような差はここではなく
+# 各ステージの COPY で表現する。→ docs/notes/step-04-backend-container.md
+__pycache__/
+.pytest_cache/
+.venv/
+.git/

@@ -23,5 +23,22 @@ services:
       CLAUDE_CONFIG_DIR: /home/vscode/.claude
     working_dir: /workspaces/todo-fastapi
 
+  api:
+    build:
+      # Dockerfile は5段構成だが、開発ではここで dev ステージだけをビルドする。
+      target: dev
+    volumes:
+      # dev ステージはコードを COPY していないので、バインドマウントで補う。
+      # 保存した変更がコンテナ内に即反映される（--reload と組み合わせて自動リロード）。
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+      # デバッガ（debugpy）用。Step 5 で使う。
+      - "5678:5678"
+    # --reload はファイル変更を監視して自動再起動する開発専用のオプション。
+    # 本番では余計な監視プロセスが常駐するだけで無意味なため、
+    # イメージの CMD には焼き込まずここで指定する。
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
 volumes:
   claude-config:

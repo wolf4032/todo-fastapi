@@ -1,0 +1,23 @@
+[project]
+name = "todo-fastapi-backend"
+version = "0.1.0"
+description = "TODO API（学習用）のバックエンド"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+]
+
+[dependency-groups]
+# uv sync --frozen --no-dev（本番）と uv sync --frozen（開発）で
+# ここが入るかどうかが分かれる。→ backend/Dockerfile
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+]
+
+[tool.uv]
+# app/ を pip でインストール可能なパッケージにする気はなく、
+# uvicorn から直接読ませるだけなので、ビルドバックエンドの設定を省略できる。
+package = false

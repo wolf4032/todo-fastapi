@@ -4,7 +4,6 @@
 # → docs/notes/step-02-devcontainer.md
 name: todo-fastapi
 
-# api は Step 4 で追加する。
 # 開発専用の devtools は本番の構成に混ぜたくないので compose.override.yaml 側に置く。
 services:
   db:
@@ -19,11 +18,23 @@ services:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       # DB プロセスが起動しているだけでなく、接続を受け付けられる状態かまで確認する。
-      # api を追加する Step 4 で depends_on の condition: service_healthy から使う。
+      # api の depends_on の condition: service_healthy から使う。
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  api:
+    build:
+      # コンテキストを ./backend に絞る。Docker デーモンに送られるファイルも
+      # COPY の起点も backend/ 配下だけになり、ルートの compose や .devcontainer/ は
+      # イメージから見えない。→ docs/notes/step-04-backend-container.md
+      context: ./backend
+    depends_on:
+      db:
+        # db が「起動している」だけでなく「接続を受け付けられる」状態になってから
+        # api を起動する。→ docs/notes/step-03-postgres.md
+        condition: service_healthy
 
 volumes:
   pgdata:
