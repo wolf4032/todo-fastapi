@@ -30,6 +30,13 @@ services:
       # COPY の起点も backend/ 配下だけになり、ルートの compose や .devcontainer/ は
       # イメージから見えない。→ docs/notes/step-04-backend-container.md
       context: ./backend
+    environment:
+      # ホスト名・ポートは compose のサービス名 db がそのまま名前解決できるため
+      # Settings 側の既定値（db:5432）に任せ、ここでは認証情報だけを渡す。
+      # → docs/notes/step-05-app-foundation.md
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     depends_on:
       db:
         # db が「起動している」だけでなく「接続を受け付けられる」状態になってから

@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    // api コンテナで待ち受けている debugpy に接続する。起動は `make debug` で行う。
+    // → docs/notes/step-05-app-foundation.md
+    "configurations": [
+        {
+            "name": "Python: api にアタッチ (docker)",
+            "type": "debugpy",
+            "request": "attach",
+            // このデバッグアダプタの接続は devtools コンテナの中から行われるため、
+            // ホスト(Mac)の localhost ではなく、compose ネットワーク上のサービス名で指定する。
+            "connect": {
+                "host": "api",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/backend",
+                    "remoteRoot": "/app"
+                }
+            ],
+            "justMyCode": false
+        }
+    ]
+}

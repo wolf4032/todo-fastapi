@@ -15,6 +15,7 @@
 | [Step 2](step-02-devcontainer.md) | Dev Container、ツールボックス方式の根拠、git の所有者チェック、`ARG` と `ENV`、Compose のマージ、Claude Code の導入 |
 | [Step 3](step-03-postgres.md) | PostgreSQL、公式イメージの初回限定初期化、healthcheck と `depends_on` の関係、`.env` の変数展開と非コミットの理由 |
 | [Step 4](step-04-backend-container.md) | backend のマルチステージ Dockerfile、ビルドコンテキストと `.dockerignore` の限界、`tool.uv.package = false`、非 root ユーザーと ARG、`backend/` を丸ごとマウントする理由、devtools の波線ギャップ |
+| [Step 5](step-05-app-foundation.md) | `Settings`・DB接続・構造化ログ・統一エラーハンドリング、`.env` 書き換えで確認したエラーの出方、`debugpy` アタッチのトラブルシュート |
 
 ## トピックノート
 
@@ -22,3 +23,6 @@
 |---|---|
 | [Docker のボリュームと権限](topic-docker-volumes.md) | マウントの3種類、永続性、名前付きボリュームの初回作成時のコピー、UID による権限、トラブルシュート |
 | [ビルド時に決まること・実行時に決まること](topic-docker-build-and-run.md) | `RUN` と `CMD` のタイミングの違い、CMD とメインプロセス、compose の `command:` との関係、healthcheck の汎用的な仕組み、`docker compose up -d` |
+| [async/await・並行処理](topic-async-await.md) | コルーチン、`await` が本当にブロックする範囲、並行処理と並列処理の違い、Python/JSの差、FastAPIでの実務上の注意 |
+| [コンテナ間ネットワークとDNS](topic-docker-networking.md) | VS Code拡張機能の実行場所、`docker compose run` のDNS別名、ゾンビコンテナ、診断コマンド |
+| [Pydantic/pydantic-settingsの基礎](topic-pydantic-basics.md) | 今回追加した4パッケージの役割分担、dataclassとの違い、環境変数の大文字小文字マッチング |
