@@ -1,5 +1,8 @@
 {
     "version": "0.2.0",
+    // 本来は VS Code の「実行とデバッグ」→「launch.jsonファイルを作成」→
+    // 「Python Debugger: Remote Attach」から生成できる設定。他プロジェクトで作る際はそちらを使う。
+    // → docs/notes/topic-scaffold-generators.md
     // api コンテナで待ち受けている debugpy に接続する。起動は `make debug` で行う。
     // → docs/notes/step-05-app-foundation.md
     "configurations": [

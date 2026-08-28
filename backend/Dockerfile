@@ -53,6 +53,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 # 本番イメージには uv もテストライブラリも tests/ も存在しない。
 # 必要なもの（app/ だけ）を明示的に COPY することで実現している。
 COPY app/ ./app/
+# マイグレーションは本番でも「別ジョブとして」実行するため、
+# その実行に必要な alembic.ini と migrations/ もここに含める。
+# → docs/notes/step-06-alembic.md
+COPY alembic.ini ./
+COPY migrations/ ./migrations/
 
 USER app
 
