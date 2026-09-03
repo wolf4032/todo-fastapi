@@ -39,3 +39,11 @@ docker inspect <container> --format '{{(index .NetworkSettings.Networks "todo-fa
 ```
 
 `getent hosts <name>` は、その名前が今の場所からDNSで解決できるかどうかだけを確認する、副作用のない読み取り専用コマンド。
+
+## `devtools` から `curl localhost:8000` が繋がらなかった話（Step 7）
+
+`debugpy` のときと原理はまったく同じで、今度は `curl` で再現した。`devtools` コンテナのシェルから `curl localhost:8000/api/v1/todos` を叩くと `Connection refused` になる。`api` コンテナ自体は正常に起動しており、Mac 本体からの `curl localhost:8000/...` は問題なく通る。
+
+原因は同じく「`devtools` から見た `localhost` は `devtools` 自身のループバックアドレスであり、`api` とは無関係」という点。`devtools` から `api` を叩くには `curl http://api:8000/...` のようにサービス名で名前解決する必要がある。
+
+これは `api` コンテナが `db` に接続する際、`localhost` ではなく `postgres_host: str = "db"`（[config.py](../../backend/app/core/config.py)）とサービス名で指定しているのと同じ原理。「今どのコンテナから実行しているかを意識し、宛先はその場所から見えるサービス名で指定する」というのが一般化した教訓。

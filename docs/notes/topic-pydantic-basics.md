@@ -31,3 +31,9 @@ PostgreSQL
 ## pydantic-settings の環境変数マッチング
 
 `class Settings(BaseSettings)` のフィールドは、既定で**大文字小文字を区別せずに**同名の環境変数と対応する（`postgres_user: str` ↔ `POSTGRES_USER`）。この既定値は `case_sensitive=False` で、`SettingsConfigDict` で明示しても意味は変わらない（デフォルトと同じ値を書いても動作は変わらないため、[config.py](../../backend/app/core/config.py) では省略している）。
+
+## なぜ「Serializer」と呼ぶか（Step 7）
+
+Python のオブジェクトは、属性が他のオブジェクトを参照する形で**枝分かれした構造**を持てる。一方ネットワークやファイルは「バイトが一列に並んだもの」しか扱えない。参照（メモリアドレス）は今のプロセス内でしか意味を持たないので送っても無意味であり、参照先の実際の値をその場に書き出す必要がある。この「枝分かれした構造 → 一列に並んだバイト列（今回は JSON という文字列）」への変換を**直列化（serialize）**と呼ぶ。JSON の `{}` / `[]` は、ポインタの代わりに構造をテキストの中に埋め込んで表現している。
+
+Step 7 で作った `TodoRead`（ORM インスタンス → JSON）と `TodoCreate`（届いた JSON → 検証済みの Python オブジェクト）は、この直列化・非直列化を担っている。Django REST Framework の「Serializer」という命名は比喩ではなく、文字通り同じことをしているからそう呼ばれている。

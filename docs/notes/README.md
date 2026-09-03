@@ -17,6 +17,7 @@
 | [Step 4](step-04-backend-container.md) | backend のマルチステージ Dockerfile、ビルドコンテキストと `.dockerignore` の限界、`tool.uv.package = false`、非 root ユーザーと ARG、`backend/` を丸ごとマウントする理由、devtools の波線ギャップ |
 | [Step 5](step-05-app-foundation.md) | `Settings`・DB接続・構造化ログ・統一エラーハンドリング、`.env` 書き換えで確認したエラーの出方、`debugpy` アタッチのトラブルシュート |
 | [Step 6](step-06-alembic.md) | `Todo` モデルと初回マイグレーション、標準の生成手段のやり直し、`pyproject.toml`/`uv.lock`の食い違い、`create_all()`との比較 |
+| [Step 7](step-07-todo-schema-crud-api.md) | `TodoCreate`/`TodoRead`、CRUD層、作成・取得API、ORMとスキーマの分離、404変換をエンドポイント層に置く理由、`devtools`から`api`へのcurlが繋がらなかった件 |
 
 ## トピックノート
 
@@ -25,10 +26,11 @@
 | [Docker のボリュームと権限](topic-docker-volumes.md) | マウントの3種類、永続性、名前付きボリュームの初回作成時のコピー、UID による権限、トラブルシュート |
 | [ビルド時に決まること・実行時に決まること](topic-docker-build-and-run.md) | `RUN` と `CMD` のタイミングの違い、CMD とメインプロセス、compose の `command:` との関係、healthcheck の汎用的な仕組み、`docker compose up -d` |
 | [async/await・並行処理](topic-async-await.md) | コルーチン、`await` が本当にブロックする範囲、並行処理と並列処理の違い、Python/JSの差、FastAPIでの実務上の注意 |
-| [コンテナ間ネットワークとDNS](topic-docker-networking.md) | VS Code拡張機能の実行場所、`docker compose run` のDNS別名、ゾンビコンテナ、診断コマンド |
-| [Pydantic/pydantic-settingsの基礎](topic-pydantic-basics.md) | 今回追加した4パッケージの役割分担、dataclassとの違い、環境変数の大文字小文字マッチング |
+| [コンテナ間ネットワークとDNS](topic-docker-networking.md) | VS Code拡張機能の実行場所、`docker compose run` のDNS別名、ゾンビコンテナ、診断コマンド、`devtools`から`api`への`curl`が繋がらない理由 |
+| [Pydantic/pydantic-settingsの基礎](topic-pydantic-basics.md) | 今回追加した4パッケージの役割分担、dataclassとの違い、環境変数の大文字小文字マッチング、なぜ「Serializer」と呼ぶか |
 | [標準の生成手段があるファイルの扱い](topic-scaffold-generators.md) | `alembic init` / `uv add` / VS Codeのlaunch.json生成など、CLIやIDE操作での生成を優先する判断基準 |
 | [SQLAlchemyの型ヒント・ORM/Coreと`default`/`server_default`](topic-sqlalchemy-defaults.md) | `Mapped[...]`とNOT NULL/nullableの対応、ORMとCoreの位置づけ、`default`と`server_default`の違い、使い分けの基準 |
 | [Alembicの基本的な仕組み](topic-alembic-basics.md) | `create_all()`との違い、`alembic_version`と履歴の持ち方、`downgrade()`の実体、autogenerateの比較対象と`head`で実行すべき理由、`NullPool`/`run_sync`の理由 |
 | [uvの依存管理](topic-uv-dependency-management.md) | `pyproject.toml`(緩い制約)と`uv.lock`(厳密な実体)の役割分担、`uv add`の冪等性、手動編集で起きた食い違い、`backend/.venv`が出来る理由 |
 | [バージョン選定の考え方](topic-version-selection.md) | Python本体は「エコシステムの追随」と「周辺知識の蓄積」の2軸、個別ライブラリには後者の基準を持ち込まない理由 |
+| [FastAPIの`Depends()`とDIの基礎](topic-fastapi-dependency-injection.md) | HTTPリクエストとエンドポイント関数の対応、DIの一般的な定義とFastAPIでの実装、`yield`による後片付け、`dependency_overrides`、URLがディレクトリ構造ではなく`prefix`の足し算で決まること、APIバージョニングの意図 |

@@ -5,6 +5,7 @@ from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.router import router as api_v1_router
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging, request_id_middleware
 from app.db.session import engine, get_db
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(lifespan=lifespan)
 app.middleware("http")(request_id_middleware)
 register_exception_handlers(app)
+app.include_router(api_v1_router, prefix="/api/v1")
 
 
 @app.get("/health")
