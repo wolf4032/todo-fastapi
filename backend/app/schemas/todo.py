@@ -25,3 +25,21 @@ class TodoRead(TodoBase):
     is_completed: bool
     created_at: datetime
     updated_at: datetime
+
+
+class TodoUpdate(BaseModel):
+    # 全フィールドが省略可（PATCH の部分更新）。TodoBase を継承しない理由は、
+    # 継承すると将来 TodoBase に必須フィールドが増えたとき、ここでの
+    # オーバーライド漏れに気づけないため。差分を表す別概念として独立させる。
+    # exclude_unset との組み合わせ方 → docs/notes/step-08-todo-crud-remainder.md
+    title: str | None = Field(default=None, min_length=1)
+    description: str | None = None
+    due_date: datetime | None = None
+    is_completed: bool | None = None
+
+
+class TodoListResponse(BaseModel):
+    items: list[TodoRead]
+    total: int
+    limit: int
+    offset: int

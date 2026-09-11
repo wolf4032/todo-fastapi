@@ -18,6 +18,7 @@
 | [Step 5](step-05-app-foundation.md) | `Settings`・DB接続・構造化ログ・統一エラーハンドリング、`.env` 書き換えで確認したエラーの出方、`debugpy` アタッチのトラブルシュート |
 | [Step 6](step-06-alembic.md) | `Todo` モデルと初回マイグレーション、標準の生成手段のやり直し、`pyproject.toml`/`uv.lock`の食い違い、`create_all()`との比較 |
 | [Step 7](step-07-todo-schema-crud-api.md) | `TodoCreate`/`TodoRead`、CRUD層、作成・取得API、ORMとスキーマの分離、404変換をエンドポイント層に置く理由、`devtools`から`api`へのcurlが繋がらなかった件 |
+| [Step 8](step-08-todo-crud-remainder.md) | 一覧（ページネーション・絞り込み）・更新・削除API、`TodoUpdate`を`TodoBase`から独立させた理由、PATCHと`exclude_unset=True`、DELETEが204を返す理由、404変換の集約 |
 
 ## トピックノート
 
@@ -31,6 +32,7 @@
 | [標準の生成手段があるファイルの扱い](topic-scaffold-generators.md) | `alembic init` / `uv add` / VS Codeのlaunch.json生成など、CLIやIDE操作での生成を優先する判断基準 |
 | [SQLAlchemyの型ヒント・ORM/Coreと`default`/`server_default`](topic-sqlalchemy-defaults.md) | `Mapped[...]`とNOT NULL/nullableの対応、ORMとCoreの位置づけ、`default`と`server_default`の違い、使い分けの基準 |
 | [Alembicの基本的な仕組み](topic-alembic-basics.md) | `create_all()`との違い、`alembic_version`と履歴の持ち方、`downgrade()`の実体、autogenerateの比較対象と`head`で実行すべき理由、`NullPool`/`run_sync`の理由 |
+| [SQLAlchemyのクエリ構築と`scalar`/`scalars`](topic-sqlalchemy-querying.md) | `select()`が文を表すオブジェクトであること、`where`/`order_by`/`limit`/`offset`の連鎖、`scalar`という用語の由来（線形代数の用法とは別物）、`execute`/`scalar`/`scalars`の使い分け |
 | [uvの依存管理](topic-uv-dependency-management.md) | `pyproject.toml`(緩い制約)と`uv.lock`(厳密な実体)の役割分担、`uv add`の冪等性、手動編集で起きた食い違い、`backend/.venv`が出来る理由 |
 | [バージョン選定の考え方](topic-version-selection.md) | Python本体は「エコシステムの追随」と「周辺知識の蓄積」の2軸、個別ライブラリには後者の基準を持ち込まない理由 |
 | [FastAPIの`Depends()`とDIの基礎](topic-fastapi-dependency-injection.md) | HTTPリクエストとエンドポイント関数の対応、DIの一般的な定義とFastAPIでの実装、`yield`による後片付け、`dependency_overrides`、URLがディレクトリ構造ではなく`prefix`の足し算で決まること、APIバージョニングの意図 |
