@@ -1,7 +1,7 @@
 # 開発コマンドの単一窓口。将来 CI からも同じターゲットを呼ぶ。
 # → docs/notes/step-05-app-foundation.md
 
-.PHONY: debug migrate
+.PHONY: debug migrate test
 
 # --reload はリローダが子プロセスでアプリを動かす都合上、デバッガがブレークポイントを
 # 拾い損ねることがある。デバッグ時は --reload を切り、debugpy でポート待受に切り替える。
@@ -19,3 +19,9 @@ debug:
 # に隠さず直接コマンドを叩く運用にする。→ docs/notes/step-06-alembic.md
 migrate:
 	docker compose exec api alembic upgrade head
+
+# python -m pytest で実行するのは、bare の pytest コマンドだと sys.path に
+# カレントディレクトリ（/app）が入らず、テストから `import app` できないため。
+# → docs/notes/step-09-tests.md
+test:
+	docker compose exec api python -m pytest
