@@ -43,5 +43,14 @@ services:
         # api を起動する。→ docs/notes/step-03-postgres.md
         condition: service_healthy
 
+  web:
+    build:
+      # api と同じく、コンテキストを ./frontend に絞る。
+      context: ./frontend
+    # ブラウザからの /api/... は web が api へ中継する（frontend/next.config.ts）。
+    # 起動に api は要らないが、docker compose up web だけで api も立つようにしておく。
+    depends_on:
+      - api
+
 volumes:
   pgdata:

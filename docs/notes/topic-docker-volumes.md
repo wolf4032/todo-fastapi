@@ -101,7 +101,39 @@ docker exec -u root todo-fastapi-devtools-1 chown -R vscode:vscode /home/vscode/
 
 ### bind mount には無い挙動
 
-コピーの仕組みは**名前付きボリューム固有**。bind mount はホスト側のディレクトリをそのまま見せるだけで、イメージ側の中身は隠される（コピーもされない）。
+コピーの仕組みは**ボリューム固有**（名前付きボリュームと、次に述べる匿名ボリューム）。bind mount はホスト側のディレクトリをそのまま見せるだけで、イメージ側の中身は隠される（コピーもされない）。
+
+---
+
+## 匿名ボリュームとコンテナの作り直し（Step 14）
+
+compose の `volumes:` にコンテナ側のパスだけを書くと、名前の無い**匿名ボリューム**になる。
+
+```yaml
+volumes:
+  - ./frontend:/app      # bind mount
+  - /app/node_modules    # 匿名ボリューム
+```
+
+bind mount で `/app` ごと覆うと、イメージに入れた `/app/node_modules` も隠れる。その上に匿名ボリュームを重ねると、初回作成時のコピーによってイメージ側の中身が見えるようになる。
+
+### `--build` だけでは中身が新しくならない
+
+compose は、コンテナを作り直すときに**前のコンテナの匿名ボリュームを引き継ぐ**。`VOLUME` を宣言したイメージ（DB など）のデータを、再作成のたびに消さないための挙動。
+
+そのため、依存を変えてイメージを作り直しても次のようになる。
+
+1. 新しいイメージの `/app/node_modules` には、新しい依存が入っている
+2. ボリュームは作り直されないので、コピーは起きない
+3. コンテナからは古いボリュームが見え、新しい中身はその下に隠れたまま
+
+作り直すには `-V`（`--renew-anon-volumes`）で匿名ボリュームも新しくする。
+
+```
+docker compose up -d --build -V web
+```
+
+名前付きボリュームは `-V` の対象外で、`docker volume rm` が要る。devtools の `frontend-node-modules` をボリュームごと作り直さず `npm ci` で入れ直しているのはこのため（→ [step-13-nextjs-scaffold.md](step-13-nextjs-scaffold.md)）。
 
 ---
 
@@ -156,3 +188,4 @@ docker volume inspect todo-fastapi_claude-config
 | データが消えた | `docker compose down -v` を打っていないか |
 | ホスト側で消せないファイルができた | コンテナを root で動かしていないか |
 | イメージ内のファイルが見えない | そのパスに bind mount を被せていないか（イメージ側の中身は隠される） |
+| イメージを作り直したのに依存が古い | 匿名ボリュームが引き継がれている。`up -V` で作り直す |

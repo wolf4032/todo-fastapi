@@ -47,3 +47,16 @@ docker inspect <container> --format '{{(index .NetworkSettings.Networks "todo-fa
 原因は同じく「`devtools` から見た `localhost` は `devtools` 自身のループバックアドレスであり、`api` とは無関係」という点。`devtools` から `api` を叩くには `curl http://api:8000/...` のようにサービス名で名前解決する必要がある。
 
 これは `api` コンテナが `db` に接続する際、`localhost` ではなく `postgres_host: str = "db"`（[config.py](../../backend/app/core/config.py)）とサービス名で指定しているのと同じ原理。「今どのコンテナから実行しているかを意識し、宛先はその場所から見えるサービス名で指定する」というのが一般化した教訓。
+
+## ブラウザは compose ネットワークの外にいる（Step 14）
+
+ブラウザは Mac 本体で動くプロセスで、compose ネットワークの一員ではない。`api` や `web` という名前を解決できるのは、ネットワーク内のコンテナが問い合わせる Docker の内蔵 DNS だけなので、ブラウザから `http://api:8000` を開くと名前解決の段階で失敗する（Chrome なら `ERR_NAME_NOT_RESOLVED`）。
+
+ブラウザがコンテナに届く経路は、`ports:` でホストに公開したポート（`localhost:3000` / `localhost:8000`）だけ。同じ宛先でも、どこから見るかで書き方が変わる。
+
+| どこから | web へ | api へ |
+|---|---|---|
+| Mac 本体（ブラウザ・ホストのターミナル） | `localhost:3000` | `localhost:8000` |
+| compose ネットワーク内のコンテナ（devtools・web） | `web:3000` | `api:8000` |
+
+Next.js の rewrites の転送先が `http://api:8000` で良いのは、転送するのがブラウザではなく web コンテナだから（→ [topic-same-origin-and-cors.md](topic-same-origin-and-cors.md)）。

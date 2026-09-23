@@ -45,6 +45,22 @@ services:
     # イメージの CMD には焼き込まずここで指定する。
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
+  web:
+    build:
+      target: dev
+    volumes:
+      # api の ./backend:/app と同じく、保存した変更をコンテナに即反映させる。
+      - ./frontend:/app
+      # バインドマウントで /app ごと覆うと、イメージに npm ci で入れた node_modules も
+      # 隠れてしまう。その上に匿名ボリュームを重ねて、イメージ側の中身を見せる。
+      # 依存を変えたら --build と -V（--renew-anon-volumes）で作り直す。
+      # → docs/notes/step-14-web-container.md
+      - /app/node_modules
+      # next dev のビルドキャッシュ。ホストと同期させると遅く、ホスト側に残す理由も無い。
+      - /app/.next
+    ports:
+      - "3000:3000"
+
 volumes:
   claude-config:
   frontend-node-modules:
