@@ -1,7 +1,7 @@
 # 開発コマンドの単一窓口。将来 CI からも同じターゲットを呼ぶ。
 # → docs/notes/step-05-app-foundation.md
 
-.PHONY: debug migrate test lint format
+.PHONY: debug migrate test lint format prod-up prod-migrate prod-down
 
 # --reload はリローダが子プロセスでアプリを動かす都合上、デバッガがブレークポイントを
 # 拾い損ねることがある。デバッグ時は --reload を切り、debugpy でポート待受に切り替える。
@@ -47,3 +47,25 @@ lint:
 format:
 	docker compose exec api ruff check --fix --exit-zero .
 	docker compose exec api ruff format .
+
+# --- 本番相当の構成（compose.prod.yaml） ---
+# -p で開発とは別のプロジェクト名にする。compose はイメージ名・コンテナ・ボリュームを
+# 「プロジェクト名-サービス名」で作るため、同じ名前のままだと prod のビルドが
+# 開発用イメージ todo-fastapi-api を上書きし、DB のボリュームも共有してしまう。
+# → docs/notes/step-11-prod-image.md
+PROD_COMPOSE = docker compose -p todo-fastapi-prod -f compose.yaml -f compose.prod.yaml
+
+# バインドマウントが無いので、コードの変更はビルドし直さない限り反映されない。
+# そのため毎回 --build を付ける。ホストの 8000 番を使うので、開発の api は先に止める。
+#   docker compose stop api
+prod-up:
+	$(PROD_COMPOSE) up -d --build
+
+# 本番ではマイグレーションをアプリの起動処理に混ぜず、使い捨ての別ジョブとして流す。
+# run --rm は「このコマンドのためだけにコンテナを1つ立て、終わったら消す」。
+# → docs/notes/step-11-prod-image.md
+prod-migrate:
+	$(PROD_COMPOSE) run --rm api alembic upgrade head
+
+prod-down:
+	$(PROD_COMPOSE) down

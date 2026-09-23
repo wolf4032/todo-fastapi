@@ -21,6 +21,7 @@
 | [Step 8](step-08-todo-crud-remainder.md) | 一覧（ページネーション・絞り込み）・更新・削除API、`TodoUpdate`を`TodoBase`から独立させた理由、PATCHと`exclude_unset=True`、DELETEが204を返す理由、404変換の集約 |
 | [Step 9](step-09-tests.md) | 単体テストと結合テスト、テスト用DBの分離、トランザクションロールバックによる独立、`dependency_overrides`、イベントループをまたいだDB接続の再利用で3件落ちた件 |
 | [Step 10](step-10-lint-format-editor.md) | ruff/mypy/pytest設定の集約、日本語コメントと衝突したルール、mypyの`Duplicate module`とStarletteの型不整合、pre-commitをdevtoolsに置く理由、`/opt/venv`を指せない件、`formatOnSave`の発火条件 |
+| [Step 11](step-11-prod-image.md) | `compose.prod.yaml`、`-f`指定でoverrideが読まれない仕組み、`-p`でプロジェクトを分けた理由、マイグレーションの別ジョブ化、prodイメージの中身とサイズ、本番にpytestを入れるリスク、イミュータブルなデプロイ |
 
 ## トピックノート
 

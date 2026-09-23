@@ -1,0 +1,14 @@
+# 本番相当の差分。compose.override.yaml と違い自動では読まれないので、
+#   docker compose -f compose.yaml -f compose.prod.yaml ...
+# と明示指定する。-f を1つでも書くと compose.override.yaml は読まれなくなるため、
+# devtools・バインドマウント・--reload はこの構成には一切現れない。
+# → docs/notes/step-11-prod-image.md
+services:
+  api:
+    build:
+      target: prod
+    # volumes も command も書かない。
+    # コードはイメージに焼かれた app/ だけが動き、起動コマンドは Dockerfile の CMD
+    # （--reload なし）がそのまま使われる。実行ユーザーも Dockerfile の USER app（非 root）。
+    ports:
+      - "8000:8000"
