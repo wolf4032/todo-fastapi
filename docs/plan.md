@@ -301,6 +301,52 @@ todo-fastapi/
 
 ---
 
+## 追加ステップ: フロントエンド（Step 13〜16）
+
+Step 12 までで API は完成している。その上に、Next.js（App Router）+ TypeScript の画面を1枚だけ足す。機能は一覧・追加・完了切り替え・削除。
+
+### 追加の設計判断
+
+- **開発は `devtools`、実行は `web` コンテナ**: backend と同じ分け方（ADR 0001 / 0003）。Node は Claude Code のために `devtools` に入っている Feature をそのまま使う
+- **API へは Next.js の rewrites で中継し、同一オリジンにする**: ブラウザは `localhost:3000/api/...` にだけリクエストを送り、`web` コンテナが compose ネットワーク内で `http://api:8000` に転送する。CORS が不要になる。本番で前段のリバースプロキシがパスで振り分ける構成と、ブラウザから見た URL の形が同じになる。CORS を使う案（ブラウザから `localhost:8000` を直接呼ぶ）は採らない
+- **`node_modules` は `devtools` と `web` で別々に持つ**: backend で `api` の `/opt/venv` と `devtools` の `backend/.venv` を別々に作っているのと同じ構図。どちらも同じ `package-lock.json` から `npm ci` で作る
+
+### Step 13: Next.js の雛形と devtools の Node 環境
+
+- `devtools` 内で `create-next-app` を実行して `frontend/` を生成する（`--skip-install`）。カスタマイズ前に `git add` して生成直後の状態を記録する
+- `devtools` の `frontend/node_modules` を名前付きボリュームに載せる（macOS とのファイル同期を避ける）。所有者問題はイメージ側でディレクトリを先に作って回避する
+- `postCreateCommand` に `npm ci` を足す。ESLint / Prettier の拡張機能と保存時フォーマットの設定を足す
+- 解説: `package.json` と `package-lock.json` の関係（`pyproject.toml` / `uv.lock` との対応）、`npm install` と `npm ci` の違い、生成されたファイルの役割
+- 確認: Rebuild Container 後、`frontend/app/page.tsx` で波線が出ない / 補完が効く / `npm run lint` が通る
+- コミット: `chore: Next.js の雛形と開発環境を追加`
+
+### Step 14: web コンテナと API への中継
+
+- `frontend/Dockerfile`（`deps` → `dev` / `builder` → `prod` のマルチステージ）と `.dockerignore`
+- `compose.yaml` に `web`、`compose.override.yaml` にバインドマウント・`npm run dev`・ポート 3000
+- `next.config.ts` の rewrites で `/api/:path*` を `http://api:8000/api/:path*` へ転送する
+- 解説: **同一オリジンポリシーと CORS**（→ トピックノート）、ブラウザから見た `localhost` とコンテナから見た `api` の違い、依存を変えたときに `web` の `node_modules` を作り直す方法
+- 確認: `curl localhost:3000/api/v1/todos` が API のレスポンスを返す / ブラウザで `localhost:3000` が開く / ファイル保存でホットリロードされる
+- 問い: rewrites を使わずブラウザから `http://api:8000` を直接呼ぶと、なぜ失敗するか？
+- コミット: `feat: web コンテナと API への中継を追加`
+
+### Step 15: TODO 画面
+
+- `TodoRead` などに対応する TypeScript の型と、`fetch` を包んだ小さな API クライアント
+- 一覧・追加フォーム・完了切り替え・削除を1ページに（Client Component）
+- 解説: Server Component と Client Component の境界、FastAPI のエラーレスポンスを画面でどう扱うか
+- 確認: 画面から CRUD を一通り操作 → `curl localhost:8000/api/v1/todos` や `psql` でも同じデータが見える
+- コミット: `feat: TODO の一覧・作成・更新・削除画面を追加`
+
+### Step 16: 本番相当の web と文書の更新
+
+- `compose.prod.yaml` に `web`（`target: prod`、Next.js の standalone 出力、非 root）。`make prod-up` で api と web が揃って立つ
+- README の構成図・手順、ADR（API への中継方式）、フロント追加手順の節を「実施済み」に書き換える
+- 確認: `make prod-up` → `localhost:3000` で動く / prod イメージに `devDependencies` やソースの `.tsx` が無い / dev と prod のイメージサイズ比較
+- コミット: `docs: フロントエンドの構成を README と ADR に反映`
+
+---
+
 ## 全体の最終検証
 
 ```bash
@@ -334,7 +380,6 @@ git log --oneline                      # 12 コミットが機能単位で並ん
 
 ## スコープ外（将来の拡張）
 
-- **フロントエンド**: `frontend/` + ツールボックスに Node の Dev Container Feature を追加 + compose に `web`。本番はビルド済み静的ファイルを配信する独立イメージ
 - **ユーザー認証**: `models/user.py`、`api/v1/endpoints/auth.py`（JWT）、`deps.get_current_user`、`todos.user_id` 外部キー
 - **CI/CD**: GitHub Actions から `make lint` / `make test` を実行し、`--target prod` でイメージをビルド
 - **E2E テスト**: フロント追加時に Playwright を `tests/e2e/` に配置

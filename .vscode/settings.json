@@ -38,6 +38,25 @@
     }
   },
 
+  // frontend の整形は Prettier、自動修正は ESLint と役割を分ける。
+  // Prettier 拡張は frontend/node_modules の prettier（package-lock.json で版固定）を
+  // 優先して使うので、エディタとコマンドラインで整形結果がずれない。
+  // → docs/notes/step-13-nextjs-scaffold.md
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[css]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[tailwindcss]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  // ESLint 拡張は既定でワークスペースのルートに設定ファイルを探す。
+  // 設定は frontend/ にあるので、そこを起点にさせる。
+  "eslint.workingDirectories": ["./frontend"],
+  // CSS を Tailwind 構文として扱わせる。標準の CSS として扱うと、
+  // globals.css の @theme など Tailwind 独自の記法に波線が出る。
+  "files.associations": { "*.css": "tailwindcss" },
+
   "[toml]": { "editor.defaultFormatter": "tamasfe.even-better-toml" },
   "[yaml]": { "editor.defaultFormatter": "redhat.vscode-yaml" },
   "[json]": { "editor.defaultFormatter": "vscode.json-language-features" },

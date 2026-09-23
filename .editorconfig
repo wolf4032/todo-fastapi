@@ -15,6 +15,11 @@ indent_size = 4
 [*.{yaml,yml,json,jsonc}]
 indent_size = 2
 
+# JS / TS 界隈の慣習は2。Prettier は自前の設定ファイルが無いとここを読むため、
+# 4 のままだと create-next-app の生成物が全部インデントし直されてしまう。
+[*.{js,jsx,mjs,cjs,ts,tsx,css}]
+indent_size = 2
+
 [*.md]
 indent_size = 2
 # Markdown は行末の半角スペース2つが改行を意味するため、除去しない

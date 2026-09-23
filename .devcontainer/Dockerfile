@@ -47,4 +47,11 @@ RUN groupadd --gid $USER_GID $USERNAME \
 RUN mkdir -p /home/$USERNAME/.claude \
     && chown -R $USER_UID:$USER_GID /home/$USERNAME/.claude
 
+# frontend/node_modules も名前付きボリュームをマウントするので、理由は同上。
+# マウント先はバインドマウントしたリポジトリの中だが、ボリュームの初回作成時に
+# コピーされるのはイメージ側のこのディレクトリなので、ここで作っておけば効く。
+# → docs/notes/topic-docker-volumes.md
+RUN mkdir -p /workspaces/todo-fastapi/frontend/node_modules \
+    && chown -R $USER_UID:$USER_GID /workspaces/todo-fastapi/frontend
+
 USER $USERNAME

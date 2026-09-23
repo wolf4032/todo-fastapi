@@ -17,6 +17,11 @@ services:
       # Claude Code の認証情報・設定・セッション履歴の保存先。
       # コンテナを作り直しても消えないよう名前付きボリュームに載せる。
       - claude-config:/home/vscode/.claude
+      # バインドマウントの内側を、名前付きボリュームで上書きする。
+      # node_modules はファイル数が桁違いに多く、ホスト（macOS）と同期させると遅い。
+      # ホスト側には中身の無い frontend/node_modules ディレクトリだけが現れる。
+      # 中身は postCreateCommand の npm ci で入れる。
+      - frontend-node-modules:/workspaces/todo-fastapi/frontend/node_modules
     environment:
       # ~/.claude.json（OAuth アカウント情報）は既定では ~/.claude の外に置かれるため、
       # 保存先を明示しないとリビルドのたびに再ログインが必要になる。
@@ -42,3 +47,4 @@ services:
 
 volumes:
   claude-config:
+  frontend-node-modules:

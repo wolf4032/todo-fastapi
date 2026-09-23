@@ -32,7 +32,7 @@
   // bind mount したファイルの所有者ズレ（git の dubious ownership）を防ぐ根本対策。
   "updateRemoteUserUID": true,
 
-  // コンテナ作成直後に一度だけ走る。3つやっている。
+  // コンテナ作成直後に一度だけ走る。4つやっている。
   //
   // 1. safe.directory: updateRemoteUserUID でも所有者判定が食い違う環境があるための保険
   //    （CVE-2022-24765 の所有者チェック）。書き換わるのはコンテナ内の設定のみで、
@@ -44,7 +44,11 @@
   // 3. pre-commit install: .git/hooks/pre-commit を書き込み、git commit 時に
   //    .pre-commit-config.yaml の検査が走るようにする。
   //    → docs/notes/topic-lint-and-precommit.md
-  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && uv sync --frozen --project backend && pre-commit install",
+  // 4. npm ci: uv sync と同じ理由で、frontend/package-lock.json から devtools 側にも
+  //    node_modules を作る（中身は名前付きボリュームに載る）。npm ci はロックファイルを
+  //    書き換えず、その通りに入れ直すコマンドで、--frozen 付きの uv sync に当たる。
+  //    → docs/notes/step-13-nextjs-scaffold.md
+  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && uv sync --frozen --project backend && pre-commit install && npm ci --prefix frontend",
 
   "customizations": {
     "vscode": {
@@ -58,6 +62,9 @@
         "ms-python.python",
         "ms-python.vscode-pylance",
         "charliermarsh.ruff",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
         "tamasfe.even-better-toml",
         "redhat.vscode-yaml",
         "editorconfig.editorconfig",

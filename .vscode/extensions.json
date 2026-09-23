@@ -12,6 +12,12 @@
     "ms-python.vscode-pylance",
     // リンタ兼フォーマッタ。ruff 本体を同梱しているので別途インストールは不要。
     "charliermarsh.ruff",
+    // frontend のリンタ（ESLint）とフォーマッタ（Prettier）。TypeScript の補完・型の
+    // 波線は VS Code 標準機能で、frontend/node_modules の typescript を使う。
+    // Tailwind のクラス名の補完。
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
     // pyproject.toml / compose.yaml の補完とスキーマ検証。
     "tamasfe.even-better-toml",
     "redhat.vscode-yaml",
