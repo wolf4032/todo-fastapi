@@ -63,8 +63,15 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 
 def register_exception_handlers(app: FastAPI) -> None:
-    app.add_exception_handler(StarletteHTTPException, http_exception_handler)
-    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    # 行末の ignore コメントは「この行の arg-type エラーだけ黙らせる」指示。
+    # 行頭に書くと mypy が別の意味（型コメント）に解釈するので、必ず行末に置く。
+    # Starlette の型定義はハンドラの第2引数を Exception と宣言しており、
+    # StarletteHTTPException のような部分型を受ける関数は型上は渡せない。
+    # だが実行時は「登録した例外クラスのときだけ呼ぶ」ディスパッチなので正しい。
+    # 型チェッカが表現しきれない箇所として、行単位に限定して逃がす。
+    # → docs/notes/step-10-lint-format-editor.md
+    app.add_exception_handler(StarletteHTTPException, http_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]
     # Exception への登録は、他のどのハンドラにも捕まらなかった 500 系専用
     # （Starlette が ServerErrorMiddleware 側で別扱いする）。
     app.add_exception_handler(Exception, unhandled_exception_handler)

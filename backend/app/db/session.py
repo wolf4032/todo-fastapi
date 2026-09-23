@@ -15,7 +15,7 @@ engine = create_async_engine(settings.database_url)
 async_session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
+async def get_db() -> AsyncGenerator[AsyncSession]:
     # FastAPI の Depends から呼ばれる。リクエストごとに独立したセッションを払い出し、
     # 終わったら（例外時も）確実にクローズする。
     async with async_session_factory() as session:

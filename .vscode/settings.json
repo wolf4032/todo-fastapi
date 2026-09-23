@@ -1,0 +1,74 @@
+// このリポジトリを開いたときのエディタ設定。個人設定（ユーザー設定）より優先される。
+// 開発環境の定義をリポジトリに入れておくと、別マシンで clone しても同じ体験が再現できる。
+// → docs/notes/step-10-lint-format-editor.md
+{
+  // --- Python の解決先（波線対策） ---
+  // Pylance（補完・定義ジャンプ・波線）が「どの Python の site-packages を見るか」。
+  //
+  // VS Code の拡張機能が動いているのは devtools コンテナの中であり、api コンテナの
+  // /opt/venv は見えない。そこで devtools 側に backend/uv.lock から同じ内容の venv を
+  // 作り（devcontainer.json の postCreateCommand の uv sync）、それを指す。
+  // → docs/notes/step-04-backend-container.md, docs/notes/topic-docker-networking.md
+  "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+  // app 配下は「インストールされたパッケージ」ではなく /app 直下に置かれたコードなので
+  // venv には入っていない。import app... を解決させるには起点を教える必要がある。
+  // → backend/pyproject.toml の tool.uv.package = false
+  "python.analysis.extraPaths": ["${workspaceFolder}/backend"],
+  // Pylance が編集中に行う型チェックの厳しさ。既定値は VS Code や拡張の版で変わるため
+  // 明示して環境差を無くす。mypy とは別エンジンなので指摘は完全には一致せず、
+  // 「最終的な判定は make lint（mypy）」という位置づけ。
+  "python.analysis.typeCheckingMode": "standard",
+
+  // --- 保存時の整形 ---
+  // ⚠ files.autoSave を "afterDelay" にすると formatOnSave は発火しない（VS Code の仕様）。
+  // タイマー保存は編集の途中経過なので、整形するとカーソルが飛んでしまうため。
+  // onFocusChange ならフォーカスが外れた確定的なタイミングなので両立する。
+  "files.autoSave": "onFocusChange",
+  "editor.formatOnSave": true,
+
+  "[python]": {
+    // Python の既定フォーマッタを ruff にする。指定しないと候補が複数ある扱いになり、
+    // VS Code はどれも選ばず何も起きない。
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      // 保存時に ruff の自動修正と import 並び替えを適用する。
+      // "explicit" は「ここに明示されたものだけ実行する」の意味。
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+
+  "[toml]": { "editor.defaultFormatter": "tamasfe.even-better-toml" },
+  "[yaml]": { "editor.defaultFormatter": "redhat.vscode-yaml" },
+  "[json]": { "editor.defaultFormatter": "vscode.json-language-features" },
+  "[jsonc]": { "editor.defaultFormatter": "vscode.json-language-features" },
+
+  // --- テスト ---
+  // VS Code のテストエクスプローラは無効にしておく。ここから走らせると devtools の
+  // Python で動くことになり、「開発・テスト・CI を同じ api イメージで揃える」という
+  // この構成の前提が崩れる（devtools には DB の接続情報も渡していない）。
+  // テストは make test（= api コンテナ）で走らせる。→ docs/notes/step-09-tests.md
+  "python.testing.pytestEnabled": false,
+  "python.testing.unittestEnabled": false,
+
+  // --- Git ---
+  // リモートの更新を定期的に取りに行く。ブランチの「N commits behind」表示が
+  // 実態と合うようになる（fetch なので手元は書き換わらない）。
+  "git.autofetch": true,
+  // 差分表示の既定は「空白だけの違いを無視」で、行末空白やインデントの変更が
+  // 見えない。整形まわりを触るこの構成では隠されると困るため false にする。
+  "diffEditor.ignoreTrimWhitespace": false,
+
+  // --- その他 ---
+  // 右端の目安線。backend/pyproject.toml の line-length と揃える。
+  // 文字コード・改行・インデント幅は .editorconfig 側に置き、ここには書かない
+  // （EditorConfig 拡張が読む）。→ docs/notes/step-10-lint-format-editor.md
+  "editor.rulers": [88],
+  // ノイズになるキャッシュ類をエクスプローラから隠す。
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true,
+    "**/.mypy_cache": true
+  }
+}

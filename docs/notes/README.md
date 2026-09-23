@@ -20,6 +20,7 @@
 | [Step 7](step-07-todo-schema-crud-api.md) | `TodoCreate`/`TodoRead`、CRUD層、作成・取得API、ORMとスキーマの分離、404変換をエンドポイント層に置く理由、`devtools`から`api`へのcurlが繋がらなかった件 |
 | [Step 8](step-08-todo-crud-remainder.md) | 一覧（ページネーション・絞り込み）・更新・削除API、`TodoUpdate`を`TodoBase`から独立させた理由、PATCHと`exclude_unset=True`、DELETEが204を返す理由、404変換の集約 |
 | [Step 9](step-09-tests.md) | 単体テストと結合テスト、テスト用DBの分離、トランザクションロールバックによる独立、`dependency_overrides`、イベントループをまたいだDB接続の再利用で3件落ちた件 |
+| [Step 10](step-10-lint-format-editor.md) | ruff/mypy/pytest設定の集約、日本語コメントと衝突したルール、mypyの`Duplicate module`とStarletteの型不整合、pre-commitをdevtoolsに置く理由、`/opt/venv`を指せない件、`formatOnSave`の発火条件 |
 
 ## トピックノート
 
@@ -38,4 +39,5 @@
 | [バージョン選定の考え方](topic-version-selection.md) | Python本体は「エコシステムの追随」と「周辺知識の蓄積」の2軸、個別ライブラリには後者の基準を持ち込まない理由 |
 | [Webの通信まわりの地図](topic-web-protocol-basics.md) | ソケット/HTTP/HTTPサーバー/ASGIの4層、WSGIとASGIの違いと非同期一本である意味、httpxと`requests`の関係、`ASGITransport`が何を飛ばして何を通すか |
 | [`python -m`と`sys.path`](topic-python-module-execution.md) | `sys.path`とシェルの`PATH`の違い、実行方法で`sys.path[0]`に何が入るか、空文字列`''`の意味、カレントディレクトリ自体は変わらないこと |
+| [静的解析とpre-commitの仕組み](topic-lint-and-precommit.md) | リンタ/フォーマッタ/型チェッカの守備範囲の違い、`# type: ignore`の書き方、git hookの配布問題とpre-commitの解決、hookごとの隔離環境とバージョン指定が2箇所になる話、ステージ済みのみを対象にする仕組み |
 | [FastAPIの`Depends()`とDIの基礎](topic-fastapi-dependency-injection.md) | HTTPリクエストとエンドポイント関数の対応、DIの一般的な定義とFastAPIでの実装、`yield`による後片付け、`dependency_overrides`、URLがディレクトリ構造ではなく`prefix`の足し算で決まること、APIバージョニングの意図 |

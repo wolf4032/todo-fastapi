@@ -65,7 +65,7 @@ def _prepare_test_database() -> None:
 
 
 @pytest_asyncio.fixture
-async def db_session() -> AsyncGenerator[AsyncSession, None]:
+async def db_session() -> AsyncGenerator[AsyncSession]:
     # 外側の接続でトランザクションを1つ張り、その上で AsyncSession を動かす。
     # join_transaction_mode="create_savepoint" により、テスト内・CRUD層での
     # db.commit() は SAVEPOINT の解放として扱われる。最後に外側を rollback すれば
@@ -80,8 +80,8 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest_asyncio.fixture
-async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
-    async def _get_test_db() -> AsyncGenerator[AsyncSession, None]:
+async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient]:
+    async def _get_test_db() -> AsyncGenerator[AsyncSession]:
         yield db_session
 
     # get_db を差し替えて、エンドポイントにテスト用トランザクションのセッションを注入する。

@@ -32,20 +32,40 @@
   // bind mount したファイルの所有者ズレ（git の dubious ownership）を防ぐ根本対策。
   "updateRemoteUserUID": true,
 
-  // 上記でも所有者判定が食い違う環境があるための保険（CVE-2022-24765 の所有者チェック）。
-  // 書き換わるのはコンテナ内の設定のみで、ホストの ~/.gitconfig には影響しない。
-  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+  // コンテナ作成直後に一度だけ走る。3つやっている。
+  //
+  // 1. safe.directory: updateRemoteUserUID でも所有者判定が食い違う環境があるための保険
+  //    （CVE-2022-24765 の所有者チェック）。書き換わるのはコンテナ内の設定のみで、
+  //    ホストの ~/.gitconfig には影響しない。
+  // 2. uv sync: backend/uv.lock から devtools 側にも同じ venv を作る。api コンテナの
+  //    /opt/venv は devtools から見えないため、Pylance に読ませる実体がここに要る。
+  //    --frozen はロックファイルを再解決せずそのまま使う指定。
+  //    → .vscode/settings.json の python.defaultInterpreterPath
+  // 3. pre-commit install: .git/hooks/pre-commit を書き込み、git commit 時に
+  //    .pre-commit-config.yaml の検査が走るようにする。
+  //    → docs/notes/topic-lint-and-precommit.md
+  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && uv sync --frozen --project backend && pre-commit install",
 
   "customizations": {
     "vscode": {
       // 開発環境の定義をリポジトリに残すため、拡張機能もここで指定する。
-      // エディタ体験の仕上げ（フォーマッタ設定など）は Step 10 で行う。
+      // ここに書いたものは Dev Container 接続時に自動インストールされる。
+      // .vscode/extensions.json にも同じ一覧があるが、あちらは Dev Container を
+      // 使わずにフォルダを開いた人への「推奨」表示で、役割が違う。
+      // エディタ側の設定（フォーマッタ等）は .vscode/settings.json にある。
+      // → docs/notes/step-10-lint-format-editor.md
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
         "charliermarsh.ruff",
         "tamasfe.even-better-toml",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "editorconfig.editorconfig",
+        "usernamehw.errorlens",
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        "oderwat.indent-rainbow",
+        "mikestead.dotenv"
       ]
     }
   }

@@ -1,0 +1,59 @@
+# コミット時に自動で走らせる検査の定義。
+# `pre-commit install` を一度実行すると .git/hooks/pre-commit が書き込まれ、
+# 以降 `git commit` のたびに「ステージ済みファイルだけ」に対してここの hook が走る。
+# → docs/notes/topic-lint-and-precommit.md
+repos:
+  # ruff 本体は PyPI ではなくこのミラーリポジトリから取り、pre-commit が
+  # 専用の隔離環境に入れて実行する（devtools に ruff を入れる必要はない）。
+  #
+  # ⚠ rev は backend/pyproject.toml の dev 依存に入れた ruff と同じ版に揃える。
+  # ずれると「エディタと make lint は通るのに commit で弾かれる」が起きる。
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.8
+    hooks:
+      # 規約違反の検出。--fix を付けているので自動修正できるものは直してくれるが、
+      # その場合 hook は「失敗」扱いになる（＝コミットは中断される）。
+      # 直った内容を自分の目で確認してから git add し直すため。
+      - id: ruff-check
+        args: [--fix]
+        # make lint は api コンテナの /app（= backend/）の中で走るため、
+        # そちらの視界には backend/ 配下しか入らない。hook 側の範囲を広く取ると
+        # 「commit では弾かれるが make lint は通る」が起きるので明示的に揃える。
+        # ルート直下に ruff の設定ファイルが無く、backend/ の外には
+        # 既定設定が適用されてしまう（E501 や RUF001-003 が復活する）問題もある。
+        files: ^backend/
+      # 整形。
+      - id: ruff-format
+        files: ^backend/
+        # 既定の対象は [python, pyi, jupyter, markdown]。ruff は Markdown 中の
+        # Python コードブロックも整形できるが、docs/notes/ の例は「コメントを
+        # 縦に揃えて見比べさせる」等、説明のために意図的な整形をしている。
+        # コード用のルールで潰されるため Markdown は対象から外す。
+        # → docs/notes/step-10-lint-format-editor.md
+        types_or: [python, pyi]
+
+  # 言語を問わない基本的な検査。ruff は Python ファイルしか見ないため、
+  # yaml / md / toml を含むリポジトリ全体はこちらでカバーする。
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # .editorconfig で同じことを指定しているが、あれは「エディタへのお願い」で
+      # 強制力がない。設定を読まないエディタや別マシンからの編集はすり抜ける。
+      - id: trailing-whitespace
+        # Markdown の行末スペース2つは改行を意味するため、そこだけ残す。
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      # 構文として壊れた設定ファイルを弾く。
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+        # devcontainer.json と .vscode/*.json は拡張子こそ .json だが、
+        # 実体はコメントを許す JSONC。厳密な JSON パーサでは必ず落ちるため外す。
+        exclude: ^(\.devcontainer/|\.vscode/)
+      # 巨大ファイルの誤コミット（ビルド成果物やダンプ）を防ぐ。
+      - id: check-added-large-files
+      # git の衝突マーカー（<<<<<<<）を消し忘れたまま commit するのを防ぐ。
+      - id: check-merge-conflict
+      # .env など「入っていてはいけないファイル」の混入は .gitignore で防いでいるが、
+      # 秘密鍵だけは名前が多様で漏れやすいため検査する。
+      - id: detect-private-key

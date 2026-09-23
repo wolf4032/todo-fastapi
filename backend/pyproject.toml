@@ -22,9 +22,90 @@ dev = [
     "pytest-asyncio>=0.24.0",
     "httpx>=0.27.0",
     "debugpy>=1.8.0",
+    "ruff>=0.16.8",
+    "mypy>=2.3.1",
 ]
 
 [tool.uv]
 # app/ を pip でインストール可能なパッケージにする気はなく、
 # uvicorn から直接読ませるだけなので、ビルドバックエンドの設定を省略できる。
 package = false
+
+# --- 静的解析ツールの設定 ---
+# ruff / mypy / pytest の設定をこの1ファイルに集約する。
+# ツールごとに .ruff.toml / mypy.ini / pytest.ini と散らすこともできるが、
+# 「backend の設定はここを見ればよい」状態を保つ方が探す手間が少ない。
+# → docs/notes/step-10-lint-format-editor.md
+
+[tool.ruff]
+# ruff は「リンタ（規約違反の検出）」と「フォーマッタ（整形）」を1つのバイナリで兼ねる。
+# この [tool.ruff] は両方に効く共通設定。
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+# 有効にするルールを接頭辞で選ぶ。既定は ["E4", "E7", "E9", "F"] とかなり控えめ。
+#   E/W … pycodestyle（PEP 8 のスタイル規約）
+#   F   … Pyflakes（未使用 import、未定義名など「ほぼ確実にバグ」の検出）
+#   I   … isort（import の並び替え）
+#   UP  … pyupgrade（古い書き方を新しい構文へ）
+#   B   … flake8-bugbear（動くが間違いやすい書き方）
+#   SIM … flake8-simplify（冗長な書き方の単純化）
+#   RUF … ruff 独自ルール
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = [
+    # E501（行が長すぎる）。コードの行長はフォーマッタが面倒を見るが、
+    # フォーマッタは日本語コメントを折り返さないため、残すと
+    # 「直せない指摘」が学習用コメントの行にだけ延々と出続ける。
+    "E501",
+    # RUF001-003（紛らわしい Unicode 文字）。ASCII と見間違えやすい文字を
+    # 検出するルールで、英語圏では有効だが、日本語の全角括弧「（）」が
+    # 全部これに引っかかる。日本語コメントを書く前提と噛み合わない。
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# B008 は「引数の既定値の位置で関数を呼ぶな」というルール。既定値は定義時に一度だけ
+# 評価されるため、通常は罠になる。だが FastAPI の Depends()/Query() は
+# 「ここに依存を差し込む」という宣言であり、この書き方が正しい。
+# → docs/notes/topic-fastapi-dependency-injection.md
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[tool.mypy]
+# 型ヒントが実際に整合しているかを検査する。ruff は構文と規約を見るだけで型は見ない。
+python_version = "3.13"
+# strict は個別の厳しめオプション（未型付け関数の禁止、Any の混入検出など）を
+# まとめて有効にするスイッチ。後から緩めるのは簡単だが、緩い状態から
+# 締めるのは既存コードの修正が溜まって難しくなるため、最初から入れておく。
+strict = true
+# 引数なしで mypy を実行したときの検査対象。生成物である migrations/ は含めない。
+files = ["app", "tests"]
+# app/ や tests/ に __init__.py を置いていないため、mypy は app/models/todo.py と
+# app/crud/todo.py をどちらも「todo という名前のモジュール」と解釈して衝突する。
+# 「パッケージの起点は実行ディレクトリ（/app）」と明示して、
+# app.models.todo / app.crud.todo という完全な名前で区別させる。
+explicit_package_bases = true
+mypy_path = "."
+# Pydantic のモデルは実行時にフィールドから __init__ を組み立てるため、
+# 素の mypy からは引数が見えない。プラグインがモデル定義を読んで補う。
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# alembic が生成したマイグレーションは型ヒントを持たない生成物であり、
+# 手で直す対象でもないため検査から外す。
+module = "migrations.*"
+ignore_errors = true
+
+[tool.pytest.ini_options]
+# これまでコマンドラインの既定に任せていた分をここに固定する。
+testpaths = ["tests"]
+# --strict-markers は未登録の @pytest.mark.xxx をエラーにする（typo 対策）。
+# -ra は失敗・スキップの理由を最後にまとめて表示する。
+addopts = ["-ra", "--strict-markers"]
+# strict は @pytest.mark.asyncio を明示的に付けさせるモード。auto にすると
+# 省略できるが、「このテストは非同期」が一目で分からなくなるため strict のまま。
+asyncio_mode = "strict"
+# 指定しないと pytest-asyncio が既定値未設定の警告を出す。
+asyncio_default_fixture_loop_scope = "function"

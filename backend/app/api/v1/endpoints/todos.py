@@ -20,9 +20,7 @@ async def _get_todo_or_404(db: AsyncSession, todo_id: int) -> Todo:
 
 
 @router.post("", response_model=TodoRead, status_code=status.HTTP_201_CREATED)
-async def create_todo(
-    todo_in: TodoCreate, db: AsyncSession = Depends(get_db)
-) -> Todo:
+async def create_todo(todo_in: TodoCreate, db: AsyncSession = Depends(get_db)) -> Todo:
     return await todo_crud.create(db, todo_in)
 
 

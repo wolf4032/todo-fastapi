@@ -1,0 +1,31 @@
+// このフォルダを開いた人へ「入れておくと良い拡張機能」を提示するためのファイル。
+// VS Code が右下に推奨通知を出す。
+//
+// .devcontainer/devcontainer.json の customizations.vscode.extensions と内容が重なるが、
+// 役割が違う。あちらは Dev Container 接続時に「自動インストールされる」もの、
+// こちらは Dev Container を使わずにフォルダを開いた人への「推奨」。
+// → docs/notes/step-10-lint-format-editor.md
+{
+  "recommendations": [
+    // Python 本体（デバッガ・インタプリタ選択）と Pylance（補完・定義ジャンプ・波線）。
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    // リンタ兼フォーマッタ。ruff 本体を同梱しているので別途インストールは不要。
+    "charliermarsh.ruff",
+    // pyproject.toml / compose.yaml の補完とスキーマ検証。
+    "tamasfe.even-better-toml",
+    "redhat.vscode-yaml",
+    // .editorconfig は VS Code の標準機能では読まれない。この拡張を入れて
+    // 初めてエディタ上で効く。→ docs/notes/step-10-lint-format-editor.md
+    "editorconfig.editorconfig",
+    // ruff / mypy / Pylance の指摘を行末にそのまま表示する。
+    "usernamehw.errorlens",
+    // git の blame をインライン表示 / ブランチとマージをグラフで可視化。
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+    // インデントの深さを色分けする。Python はインデントが構文の一部なので効く。
+    "oderwat.indent-rainbow",
+    // .env / .env.example の色付け。
+    "mikestead.dotenv"
+  ]
+}

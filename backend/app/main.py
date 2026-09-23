@@ -14,7 +14,7 @@ configure_logging()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     yield
     # graceful shutdown: プロセスを止める前にコネクションプールを明示的に閉じる。
     # → docs/notes/step-05-app-foundation.md
