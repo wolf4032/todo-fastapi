@@ -4,7 +4,7 @@ FastAPI + PostgreSQL の TODO アプリを題材に、**ローカル環境を汚
 
 - 実装計画: [docs/plan.md](docs/plan.md)（全 12 ステップ）
 - 各ステップの学習メモ: [docs/notes/](docs/notes/)
-- 設計判断の記録: `docs/adr/`（Step 12 で作成予定）
+- 設計判断の記録: [docs/adr/](docs/adr/README.md)
 
 ## 進め方
 
@@ -54,4 +54,4 @@ feat: TODO の作成・取得 API を追加
 - アプリは `api` コンテナ（`backend/Dockerfile` の `dev` ステージ）で動かす。開発・テスト・CI・本番が同じ Dockerfile と同じ `uv.lock` に由来する状態を保つ。
 - compose は3層構成。`compose.yaml`（共通）/ `compose.override.yaml`（開発差分・自動で読まれる）/ `compose.prod.yaml`（本番相当・`-f` で明示指定）。
 
-詳細な根拠は [docs/plan.md](docs/plan.md) の「設計判断と根拠」を参照。
+詳細な根拠は [docs/adr/](docs/adr/README.md) を参照。

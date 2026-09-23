@@ -14,6 +14,7 @@ Step 6 で Alembic 導入時、`alembic.ini` / `migrations/env.py` / `migrations
 | `backend/pyproject.toml` の依存追加行 | `uv add <package>` / `uv add --group dev <package>` | Step 4/5 は手で書いてしまった（過去分はそのまま、Step 6以降は `uv add` に切替） |
 | `.vscode/launch.json` | VS Code「実行とデバッグ」→「launch.jsonファイルを作成」→「Python Debugger: Remote Attach」 | 手で書いた。作り直してはいないが、次に同種のファイルが必要になったら使う |
 | `backend/pyproject.toml` の `[project]` 雛形 | `uv init` | 手で書いた（生成物が本来の意図と食い違う部分が多く、過去分は据え置き） |
+| `docs/adr/*.md` | `adr-tools`（`adr init` / `adr new`） | 手で書いた。サードパーティ製の道具で devtools にも入っておらず、雛形は英語見出しで「却下した案」の節も無い。下の「遠い場合」に当たる |
 
 ## 判断基準
 

@@ -5,7 +5,7 @@
 - **ステップノート** (`step-XX-*.md`) … そのステップで扱った内容の記録
 - **トピックノート** (`topic-*.md`) … ステップをまたいで参照する一般知識
 
-実装計画そのものは [../plan.md](../plan.md)、設計判断の記録は `../adr/`（Step 12 で作成予定）。
+実装計画そのものは [../plan.md](../plan.md)、設計判断の記録は [../adr/](../adr/README.md)。
 
 ## ステップノート
 
@@ -22,6 +22,7 @@
 | [Step 9](step-09-tests.md) | 単体テストと結合テスト、テスト用DBの分離、トランザクションロールバックによる独立、`dependency_overrides`、イベントループをまたいだDB接続の再利用で3件落ちた件 |
 | [Step 10](step-10-lint-format-editor.md) | ruff/mypy/pytest設定の集約、日本語コメントと衝突したルール、mypyの`Duplicate module`とStarletteの型不整合、pre-commitをdevtoolsに置く理由、`/opt/venv`を指せない件、`formatOnSave`の発火条件 |
 | [Step 11](step-11-prod-image.md) | `compose.prod.yaml`、`-f`指定でoverrideが読まれない仕組み、`-p`でプロジェクトを分けた理由、マイグレーションの別ジョブ化、prodイメージの中身とサイズ、本番にpytestを入れるリスク、イミュータブルなデプロイ |
+| [Step 12](step-12-readme-adr.md) | README と ADR、ADRの書き方（却下した案・書き換えない運用）、README/ADR/notes の住み分け、計画と実際の差（`make up`が無い・コマンドはホストで実行・Node Featureは導入済み） |
 
 ## トピックノート
 
