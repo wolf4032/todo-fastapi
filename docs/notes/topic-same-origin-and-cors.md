@@ -48,3 +48,16 @@ rewrites をやめてブラウザから直接呼ぶ案は、次の2段で失敗�
 
 1. `http://api:8000` は、ブラウザのいる Mac から名前解決できない（→ [topic-docker-networking.md](topic-docker-networking.md)）
 2. 名前解決できる `http://localhost:8000` にしても、ページ（`:3000`）と別オリジンなので、API 側で CORS を設定しない限りレスポンスを読めない
+
+### rewrites の代わりに Route Handler で中継する案
+
+Next.js では `app/api/[...path]/route.ts` のようなファイル（Route Handler）を置き、その中で `fetch("http://api:8000/...")` して結果を返すこともできる。これも同一オリジンになり、ブラウザから見た URL も同じ。
+
+| | rewrites | Route Handler |
+|---|---|---|
+| 書くもの | 設定の数行 | メソッドごとの中継コード |
+| メソッド・ヘッダ・本文・ステータス | そのまま通る | 自分で詰め直して渡す（漏れるとそこで挙動が変わる） |
+| web が知っていること | 「`/api` は api へ」だけ | 中継する処理の中身 |
+| できること | 転送だけ | 認証トークンの付与・応答の加工・複数 API の結果をまとめるなど |
+
+今回は中身に手を加えず渡すだけなので rewrites にした。web は API の中身を知らず、API の仕様が変わっても web 側の修正が要らない。Route Handler で中継するのは、フロント専用に API を加工・集約したいとき（BFF: Backend for Frontend と呼ばれる構成）。

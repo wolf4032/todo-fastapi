@@ -28,6 +28,47 @@ async def main():
 
 2つの `await` に挟まれたコードは、他のどのコルーチンにも中断されずに一気に実行される（協調的マルチタスク。横取りは起きない）。中断が起こり得るのは `await` と書かれた、その瞬間だけ。裏を返すと、`await` を挟まない長い同期処理を `async def` の中に書くと、他の全コルーチンをブロックしてしまう。
 
+## JavaScript の Promise と `.then` / `.catch` / `.finally`
+
+Step 15 のフロントエンドで出てきたもの。Promise は「あとで値が入る箱」で、結末は2通りある。
+
+- **resolve**（成功）: 値が入る。`.then` の方へ進む
+- **reject**（失敗）: エラーが入る。`.catch`（`await` なら `try/catch` の `catch`）の方へ進む
+
+`fetch` が reject するのは HTTP の応答をまったく受け取れなかったときだけで、404 や 500 は resolve になる（→ [step-15-todo-page.md](step-15-todo-page.md)）。
+
+```ts
+listTodos()
+  .then((res) => { /* 成功したとき。res が中身 */ })
+  .catch((e) => { /* 前のどこかで失敗したとき */ })
+  .finally(() => { /* 成功でも失敗でも最後に */ });
+```
+
+`try` / `catch` / `finally` と同じ形で、`await` で書き直すと次と同じ意味になる。
+
+```ts
+try {
+  const res = await listTodos();
+  /* 成功したとき */
+} catch (e) {
+  /* 失敗したとき */
+} finally {
+  /* 最後に */
+}
+```
+
+`.then()` に渡した関数は、**Promise に値が入ってから**呼ばれる。値が入るまで待たされるのは「渡した関数」の方で、`.then()` を書いた行より後ろのコードは待たない。
+
+**違いは「その場で止まるかどうか」**。`await` はその行で待ち、後の行は結果が出るまで進まない。`.then()` は「値が入ったらこれを呼んで」と**登録するだけ**で、すぐに次の行へ進む。
+
+```js
+console.log("1");
+p.then(() => console.log("3"));   // 登録するだけ
+console.log("2");                 // 応答を待たずに先に出る
+```
+
+`.then()` / `.catch()` も新しい Promise を返すので、鎖のようにつなげられる。途中の `.then()` で起きた失敗も、後ろの `.catch()` がまとめて受ける。`useEffect` のように関数自体を `async` にできない場所では、こちらを使う（→ [step-15-todo-page.md](step-15-todo-page.md)）。
+
 ## 並行処理（concurrency） ≠ 並列処理（parallelism）
 
 - **並列処理**: 複数のCPUコアを使い、文字通り同時刻に複数の処理を進める

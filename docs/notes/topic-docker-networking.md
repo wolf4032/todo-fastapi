@@ -60,3 +60,14 @@ docker inspect <container> --format '{{(index .NetworkSettings.Networks "todo-fa
 | compose ネットワーク内のコンテナ（devtools・web） | `web:3000` | `api:8000` |
 
 Next.js の rewrites の転送先が `http://api:8000` で良いのは、転送するのがブラウザではなく web コンテナだから（→ [topic-same-origin-and-cors.md](topic-same-origin-and-cors.md)）。
+
+## ログの送信元 IP で経路が分かる
+
+api のログには、リクエストを送ってきた相手の IP が出る。Step 15 で次のように分かれた。
+
+| 送信元 | 誰か | 経路 |
+|---|---|---|
+| `172.18.0.5` | web コンテナ（compose ネットワーク内の IP） | ブラウザ → web（rewrites）→ api |
+| `192.168.65.1` | ホスト（Docker Desktop の VM から見た Mac） | ホストの `curl` → 公開ポート 8000 → api |
+
+ブラウザからの操作でも、api から見た相手はブラウザではなく web になる。中継しているのが web であることが、ログからも確かめられる。

@@ -25,6 +25,7 @@
 | [Step 12](step-12-readme-adr.md) | README と ADR、ADRの書き方（却下した案・書き換えない運用）、README/ADR/notes の住み分け、計画と実際の差（`make up`が無い・コマンドはホストで実行・Node Featureは導入済み） |
 | [Step 13](step-13-nextjs-scaffold.md) | `create-next-app`、npm と uv の対応、`node_modules` をバインドマウントの内側で名前付きボリュームに載せる、`allowScripts`、Prettier/ESLint の設定、`LayoutProps` と `next typegen` |
 | [Step 14](step-14-web-container.md) | `web` コンテナ（`deps`→`dev`）、rewrites による API への中継、`node_modules`/`.next` の匿名ボリュームと `up -V`、Dark Reader による hydration mismatch |
+| [Step 15](step-15-todo-page.md) | TODO 画面、型と API クライアント、Server/Client Component の境界と hydration、サーバー側で相対 URL が使えない理由、`fetch` が 4xx/5xx で reject しない件、`async` を付けない中継関数、エラーの3分類、Strict Mode で GET が2回飛ぶ件 |
 
 ## トピックノート
 
@@ -32,8 +33,8 @@
 |---|---|
 | [Docker のボリュームと権限](topic-docker-volumes.md) | マウントの3種類、永続性、ボリュームの初回作成時のコピー、匿名ボリュームが再作成時に引き継がれる件と `-V`、UID による権限、トラブルシュート |
 | [ビルド時に決まること・実行時に決まること](topic-docker-build-and-run.md) | `RUN` と `CMD` のタイミングの違い、CMD とメインプロセス、compose の `command:` との関係、healthcheck の汎用的な仕組み、`docker compose up -d` |
-| [async/await・並行処理](topic-async-await.md) | コルーチン、`await` が本当にブロックする範囲、並行処理と並列処理の違い、Python/JSの差、FastAPIでの実務上の注意 |
-| [コンテナ間ネットワークとDNS](topic-docker-networking.md) | VS Code拡張機能の実行場所、`docker compose run` のDNS別名、ゾンビコンテナ、診断コマンド、`devtools`から`api`への`curl`が繋がらない理由、ブラウザが compose ネットワークの外にいること |
+| [async/await・並行処理](topic-async-await.md) | コルーチン、`await` が本当にブロックする範囲、並行処理と並列処理の違い、Python/JSの差、JS の Promise の resolve/reject と `.then`/`.catch`/`.finally`（渡した関数だけが値を待つ）、FastAPIでの実務上の注意 |
+| [コンテナ間ネットワークとDNS](topic-docker-networking.md) | VS Code拡張機能の実行場所、`docker compose run` のDNS別名、ゾンビコンテナ、診断コマンド、`devtools`から`api`への`curl`が繋がらない理由、ブラウザが compose ネットワークの外にいること、ログの送信元 IP で経路が分かること |
 | [Pydantic/pydantic-settingsの基礎](topic-pydantic-basics.md) | 今回追加した4パッケージの役割分担、dataclassとの違い、環境変数の大文字小文字マッチング、なぜ「Serializer」と呼ぶか |
 | [標準の生成手段があるファイルの扱い](topic-scaffold-generators.md) | `alembic init` / `uv add` / VS Codeのlaunch.json生成など、CLIやIDE操作での生成を優先する判断基準 |
 | [SQLAlchemyの型ヒント・ORM/Coreと`default`/`server_default`](topic-sqlalchemy-defaults.md) | `Mapped[...]`とNOT NULL/nullableの対応、ORMとCoreの位置づけ、`default`と`server_default`の違い、使い分けの基準 |
@@ -45,4 +46,6 @@
 | [`python -m`と`sys.path`](topic-python-module-execution.md) | `sys.path`とシェルの`PATH`の違い、実行方法で`sys.path[0]`に何が入るか、空文字列`''`の意味、カレントディレクトリ自体は変わらないこと |
 | [静的解析とpre-commitの仕組み](topic-lint-and-precommit.md) | リンタ/フォーマッタ/型チェッカの守備範囲の違い、`# type: ignore`の書き方、git hookの配布問題とpre-commitの解決、hookごとの隔離環境とバージョン指定が2箇所になる話、ステージ済みのみを対象にする仕組み |
 | [FastAPIの`Depends()`とDIの基礎](topic-fastapi-dependency-injection.md) | HTTPリクエストとエンドポイント関数の対応、DIの一般的な定義とFastAPIでの実装、`yield`による後片付け、`dependency_overrides`、URLがディレクトリ構造ではなく`prefix`の足し算で決まること、APIバージョニングの意図 |
-| [同一オリジンポリシーと CORS](topic-same-origin-and-cors.md) | オリジンの定義、同一オリジンポリシーが止めるのは「読むこと」、CORS とプリフライト、rewrites で中継して同一オリジンにする理由 |
+| [同一オリジンポリシーと CORS](topic-same-origin-and-cors.md) | オリジンの定義、同一オリジンポリシーが止めるのは「読むこと」、CORS とプリフライト、rewrites で中継して同一オリジンにする理由、Route Handler で中継する案との比較 |
+| [HTTP ステータスコード](topic-http-status-codes.md) | 百の位による大分類と「誰の問題か・再送すべきか」、このアプリで出るコードの一覧、400 と 422 の違い、画面側での扱い |
+| [React / Next.js のコンポーネントの種類と `useEffect`](topic-react-components-and-effects.md) | ページを開いているのはブラウザであること、Client Component と指定の無いコンポーネント、`"use server"` は関数用、`useEffect` の役割・依存配列・後片付け、もう一度実行されるきっかけ（Strict Mode・Fast Refresh）、`ignore` のスコープと止めるもの、再レンダーが起きるタイミング |
