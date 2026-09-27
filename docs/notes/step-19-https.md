@@ -79,6 +79,13 @@ configs:
 docker compose -p todo-fastapi-prod -f compose.yaml -f compose.prod.yaml logs caddy | grep -E "certificate obtained|error"
 ```
 
+実際に出たのは次の3行。
+
+- `"level":"info"` の `creating new account because no account for configured email is known to us` が2行: `error` という項目を含むので grep に掛かったが、**重大度は `info`（ただの報告）**。Let's Encrypt に証明書を頼むには、先に ACME のアカウントを作る必要がある。初回はその情報を保存したファイルがまだ無いので、`error` の項目に「ファイルが無い（`no such file or directory`）」という理由が入っているだけ。Caddy はここで自動でアカウントを作り、`caddy-data` ボリュームに保存する
+- `"logger":"tls.obtain"` の `certificate obtained successfully`: 証明書の取得に成功した
+
+ログの重要度は `level` で判断する。`error` という単語が含まれているかでは判断しない。`"email":""` はアカウントに連絡先のメールアドレスを登録していないということ。Let's Encrypt は 2025年に期限切れの通知メールをやめているので、登録しなくても困らない。
+
 ## 理解確認: HTTPS にした後も 80 番を閉じないのはなぜか
 
 回答: Let's Encrypt が合言葉のやり取りのためにアクセスする URL の接続先だから。→ 正解。
