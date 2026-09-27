@@ -1,5 +1,9 @@
 # todo-fastapi
 
+[![CI](https://github.com/wolf4032/todo-fastapi/actions/workflows/ci.yml/badge.svg)](https://github.com/wolf4032/todo-fastapi/actions/workflows/ci.yml)
+
+**デモ: <http://18.177.74.102>**（認証なし・誰でも編集可。2027年2月上旬まで公開 → [公開環境](#公開環境)）
+
 FastAPI + PostgreSQL + Next.js の TODO アプリ。アプリそのものより、次の3つを同時に満たす開発環境の構成を学ぶための学習用リポジトリ。
 
 1. **ホストを汚さない**: ホストに Python も Node も入れない。開発ツールもアプリもすべてコンテナの中で動かす
@@ -223,6 +227,48 @@ docker compose start api web
 
 開発とはプロジェクト名（`-p todo-fastapi-prod`）を分けているので、イメージも DB のボリュームも開発とは別になる（→ [step-11-prod-image.md](docs/notes/step-11-prod-image.md)）。
 
+## 公開環境
+
+Amazon Lightsail のサーバー1台（Ubuntu 24.04 LTS、メモリ 2GB）で、[本番相当の構成](#本番相当の構成)をそのまま動かしている。
+
+```
+ブラウザ ──► 18.177.74.102:80 ──► web（standalone、非 root）──中継──► api ──► db
+             ファイアウォールで開けているのは 80（HTTP）と 22（SSH）だけ
+```
+
+- サーバーの `.env` だけが手元と違う。`POSTGRES_PASSWORD` はランダムな値、`WEB_PORT=80`
+- api のポートは `127.0.0.1` に限定しているので、サーバーの外からは繋がらない。ブラウザからの API 呼び出しは web の中継を通る（→ [ADR 0005](docs/adr/0005-relay-api-via-rewrites.md)）
+
+### デプロイ手順（手作業）
+
+Lightsail の画面の「Connect using SSH」でサーバーに入り、次を実行する。
+
+```bash
+cd ~/todo-fastapi
+```
+
+```bash
+git pull
+```
+
+```bash
+make prod-up
+```
+
+モデルを変えたときだけ、マイグレーションも流す。
+
+```bash
+make prod-migrate
+```
+
+### 既知の制約
+
+- **認証が無い**: 公開 URL を知っている人は誰でも、同じ一覧を追加・編集・削除できる。画面にもその旨を表示している
+- **HTTP のみ**: 独自ドメインと HTTPS の証明書を用意していない
+- **CD が無い**: デプロイは上の手作業。CI（GitHub Actions）は lint・test・prod イメージのビルドまで
+- **サーバー1台に DB も同居**: DB はコンテナと名前付きボリュームで、バックアップは取っていない。デモのデータなので失っても作り直せばよい
+- **公開期限**: AWS の無料プラン（クレジット制）の期限で、2027年2月上旬にアカウントごと止まる
+
 ## ディレクトリ構成
 
 ```
@@ -303,5 +349,7 @@ API だけの構成（Step 12 まで）に、構成を作り直さず次を足�
 
 - [ ] ユーザー認証: `models/user.py`、`api/v1/endpoints/auth.py`（JWT）、`deps.get_current_user`、`todos.user_id` の外部キー
 - [ ] CD: CI でビルドした prod イメージをレジストリに置き、本番のコンテナを新しいイメージに差し替える
+- [ ] 独自ドメインと HTTPS
+- [ ] ECS・RDS・IaC（Terraform や CDK）による構成への移行
 - [ ] E2E テスト: Playwright を `tests/e2e/` に置く
 - [ ] リモートリポジトリへの push と、Dependabot などによる依存の自動更新・脆弱性検査
