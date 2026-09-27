@@ -11,7 +11,9 @@ services:
     # コードはイメージに焼かれた app/ だけが動き、起動コマンドは Dockerfile の CMD
     # （--reload なし）がそのまま使われる。実行ユーザーも Dockerfile の USER app（非 root）。
     ports:
-      - "8000:8000"
+      # 127.0.0.1 に限定し、そのマシンの中からしか繋がらないようにする。
+      # 公開サーバーでも API は外に出さず、ブラウザからは web の中継を通す（ADR 0005）。
+      - "127.0.0.1:8000:8000"
 
   web:
     build:
@@ -19,4 +21,6 @@ services:
     # api と同じく volumes も command も書かない。standalone の server.js を非 root で動かす。
     # api への中継先（http://api:8000）は next build の時点でイメージに焼かれている。
     ports:
-      - "3000:3000"
+      # 左（ホスト側）の番号は .env の WEB_PORT で変えられる。未設定なら 3000。
+      # 公開サーバーでは 80 にして、http://<IP> だけで開けるようにする。
+      - "${WEB_PORT:-3000}:3000"
