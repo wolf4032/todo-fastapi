@@ -10,9 +10,6 @@ class Settings(BaseSettings):
     postgres_host: str = "db"
     postgres_port: int = 5432
 
-    # フロント追加時に有効化する枠。今はどこからも参照しない。
-    cors_allow_origins: list[str] = []
-
     @property
     def database_url(self) -> str:
         return (
