@@ -27,6 +27,7 @@
 | [Step 14](step-14-web-container.md) | `web` コンテナ（`deps`→`dev`）、rewrites による API への中継、`node_modules`/`.next` の匿名ボリュームと `up -V`、Dark Reader による hydration mismatch |
 | [Step 15](step-15-todo-page.md) | TODO 画面、型と API クライアント、Server/Client Component の境界と hydration、サーバー側で相対 URL が使えない理由、`fetch` が 4xx/5xx で reject しない件、`async` を付けない中継関数、エラーの3分類、Strict Mode で GET が2回飛ぶ件 |
 | [Step 16](step-16-prod-web.md) | 本番相当の web（`builder`→`prod`）、`output: "standalone"`、`HOSTNAME=0.0.0.0`、コードを root 所有にして `.next/cache` だけ書けるようにした件、中継先がビルド時に確定すること、CD と ISR の違い、イメージの中身とサイズ |
+| [Step 17](step-17-ci.md) | GitHub Actions による CI（ワークフロー・ジョブ・ステップ、毎回まっさらな実行環境）、フロントの検査を `make lint` に統合、コミットのメールアドレスと Mac のユーザー名の履歴からの除去、AWS の root と IAM・無料枠・MFA、リポジトリ専用のトークンで push する方法 |
 
 ## トピックノート
 
