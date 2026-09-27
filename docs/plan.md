@@ -347,6 +347,36 @@ Step 12 までで API は完成している。その上に、Next.js（App Route
 
 ---
 
+## 追加ステップ: CI と公開（Step 17〜18）
+
+ポートフォリオとして「自分で作り、公開まで行った」状態にする。CD（コードの変更を自動で本番に届ける）は今回は扱わず、デプロイは手作業にする。
+
+### 追加の設計判断
+
+- **CI は Makefile を呼ぶだけにする**: 手元と CI で実行内容がずれないようにする（Step 10 の方針どおり）。CI でも `api` / `web` コンテナの中で検査を走らせ、`devtools` は立てない
+- **公開先は Amazon Lightsail のサーバー1台**: 月額固定で、ネットワークまわりの設定が少ない。Step 11・16 の本番相当の構成（`make prod-up`）をそのまま動かす。ECS・RDS・IaC を使う本格的な構成は CD と合わせて将来の課題にする
+- **外に開けるのは Web の入口だけ**: DB と API のポートは公開しない。ブラウザからの API 呼び出しは web の中継（ADR 0005）を通る
+
+### Step 17: GitHub への push と CI
+
+- GitHub に公開リポジトリを作り、push する。公開前に、コミットに記録されたメールアドレスと、秘密情報がコミットされていないことを確認する
+- `.github/workflows/ci.yml`: push と pull request のたびに `db` / `api` / `web` を立て、`make lint`（フロントの lint・typecheck を含む）と `make test` を実行する。別のジョブで prod イメージをビルドする
+- 解説: CI とは何か、GitHub Actions のワークフロー・ジョブ・ステップ、CI の実行環境が毎回まっさらであること
+- 確認: GitHub の Actions タブで緑になる / わざと lint を崩して push すると赤になる
+- コミット: `chore: GitHub Actions による CI を追加`
+
+### Step 18: Lightsail での公開
+
+- AWS 側の準備（root ユーザーの MFA、請求・クレジットの確認）
+- Lightsail のインスタンス（メモリ 2GB 以上）を作り、Docker と make を入れ、リポジトリを clone する
+- `.env` に強いパスワードを書き、`make prod-up` → `make prod-migrate`。ファイアウォールは Web の入口だけを開ける
+- 画面に「デモ用：誰でも編集できます」と表示する。README に公開 URL と、手作業のデプロイ手順・既知の制約（認証なし・HTTP のみ・CD なし）を書く
+- 解説: 固定 IP、ファイアウォール、ローカルの本番相当とサーバーでの違い
+- 確認: 手元のブラウザから公開 URL で CRUD が動く / DB と API のポートに外から繋がらない
+- コミット: `docs: 公開環境とデプロイ手順を追加`
+
+---
+
 ## 全体の最終検証
 
 ```bash
