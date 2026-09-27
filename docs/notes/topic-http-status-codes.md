@@ -21,7 +21,7 @@ HTTP の応答の1行目に入る3桁の数字。**百の位で大分類**が決
 | 200 | OK | 成功。本文に結果がある | 一覧取得・1件取得・更新（PATCH） |
 | 201 | Created | 成功して、新しく作った | 作成（POST）。本文は作った TODO |
 | 204 | No Content | 成功。返す本文は無い | 削除（DELETE） |
-| 307 / 308 | Temporary / Permanent Redirect | 別の URL へ（一時的 / 恒久的） | 末尾に `/` を付けた `/api/v1/todos/` を送ったとき。api に直接送ると FastAPI が 307、web 経由だと rewrites より先に Next.js が 308 を返し、どちらも `/api/v1/todos` へ移動させる |
+| 307 / 308 | Temporary / Permanent Redirect | 別の URL へ（一時的 / 恒久的） | 末尾に `/` を付けた `/api/v1/todos/` を送ったとき。api に直接送ると FastAPI が 307、web 経由だと rewrites より先に Next.js が 308 を返し、どちらも `/api/v1/todos` へ移動させる。公開環境では `http://` で来たリクエストを Caddy が 308 で `https://` へ移動させる（→ [step-19-https.md](step-19-https.md)）。301 / 302 と違い、307 / 308 は POST などのリクエストの種類と本文を変えずに送り直させる |
 | 404 | Not Found | 対象が無い | 存在しない id・存在しない URL |
 | 405 | Method Not Allowed | その URL はあるが、そのメソッドは受け付けない | `/api/v1/todos` に PUT を送る |
 | 422 | Unprocessable Content | 形式は読めたが、中身が決まりを満たさない | `title` が空・`limit=0` など Pydantic の検証に落ちた |

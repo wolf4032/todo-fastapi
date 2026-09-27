@@ -29,6 +29,7 @@
 | [Step 16](step-16-prod-web.md) | 本番相当の web（`builder`→`prod`）、`output: "standalone"`、`HOSTNAME=0.0.0.0`、コードを root 所有にして `.next/cache` だけ書けるようにした件、中継先がビルド時に確定すること、CD と ISR の違い、イメージの中身とサイズ |
 | [Step 17](step-17-ci.md) | GitHub Actions による CI（ワークフロー・ジョブ・ステップ、毎回まっさらな実行環境）、フロントの検査を `make lint` に統合、コミットのメールアドレスと Mac のユーザー名の履歴からの除去、AWS の root と IAM・無料枠・MFA、リポジトリ専用のトークンで push する方法 |
 | [Step 18](step-18-lightsail.md) | Lightsail での公開、インスタンスの選択理由（OS のみ・Dual-stack・2GB）、静的 IP とファイアウォール、`docker` グループの権限、記号を含まないパスワードの生成と控えなくてよい理由、`127.0.0.1` への限定と `WEB_PORT`、手作業のデプロイ手順 |
+| [Step 19](step-19-https.md) | Caddy による HTTPS 化、ドメインと証明書の違い、DuckDNS（自宅の IP が入る件）、認証局と ACME の HTTP-01、リバースプロキシ、`{$SITE_ADDRESS}` と `configs:`、HTTPS 後も 80 番を開ける理由と 308、IP で開くとエラーになる件 |
 
 ## トピックノート
 
