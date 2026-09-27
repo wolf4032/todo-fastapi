@@ -116,6 +116,8 @@ Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
 
 `core/exceptions.py` が使っている定数名が非推奨になったもの。動作に影響はないが、警告の整理は静的解析をまとめて入れる Step 10 で扱う。
 
+→ Step 10 では扱い損ね、Step 16 の後で `HTTP_422_UNPROCESSABLE_CONTENT` に書き換えて解消した。値は同じ 422 で、RFC 9110 で名前が Unprocessable Content に変わったのに Starlette が追従したもの。
+
 ---
 
 ## 確認して分かったこと

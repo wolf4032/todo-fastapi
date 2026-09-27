@@ -40,7 +40,7 @@ async def validation_exception_handler(
 ) -> JSONResponse:
     return _error_response(
         request,
-        status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
         "validation_error",
         "リクエストの内容が不正です",
         details=exc.errors(),
