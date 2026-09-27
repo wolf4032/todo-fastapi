@@ -122,12 +122,12 @@ docker compose down
 | コマンド | 内容 |
 |---|---|
 | `make test` | unit + integration テスト（テスト用 DB `todo_test` を使う） |
-| `make lint` | `ruff check` / `ruff format --check` / `mypy`。報告のみ |
+| `make lint` | api で `ruff check` / `ruff format --check` / `mypy`、web で ESLint と型検査。報告のみ |
 | `make format` | ruff の自動修正と整形を適用する |
 
-`git commit` 時にも pre-commit が ruff 等を走らせる。
+`git commit` 時にも pre-commit が ruff 等を走らせる。GitHub に push すると、CI（`.github/workflows/ci.yml`）が同じ `make lint` / `make test` と prod イメージのビルドを走らせる。
 
-フロントエンドの静的解析は VS Code のターミナル（`devtools`）で実行する。
+編集中にフロントエンドだけを手早く検査したいときは、VS Code のターミナル（`devtools`）でも実行できる。
 
 ```bash
 npm run lint --prefix frontend
@@ -228,6 +228,7 @@ docker compose start api web
 ```
 todo-fastapi/
 ├── .devcontainer/         devtools のイメージと Dev Container の接続設定
+├── .github/workflows/     CI の定義。push のたびに make lint / make test と prod のビルドを走らせる
 ├── .vscode/               保存時の整形・Python の解決先・デバッガ設定（コミットする）
 ├── compose.yaml           共通の定義（db / api / web）
 ├── compose.override.yaml  開発の差分（devtools・バインドマウント・--reload）。自動で読まれる
@@ -301,6 +302,6 @@ API だけの構成（Step 12 まで）に、構成を作り直さず次を足�
 ## 将来の拡張
 
 - [ ] ユーザー認証: `models/user.py`、`api/v1/endpoints/auth.py`（JWT）、`deps.get_current_user`、`todos.user_id` の外部キー
-- [ ] CI/CD: GitHub Actions から `make lint` / `make test` とフロントエンドの `lint` / `typecheck` を呼び、`--target prod` で api と web のイメージをビルドして、本番のコンテナを新しいイメージに差し替える
+- [ ] CD: CI でビルドした prod イメージをレジストリに置き、本番のコンテナを新しいイメージに差し替える
 - [ ] E2E テスト: Playwright を `tests/e2e/` に置く
 - [ ] リモートリポジトリへの push と、Dependabot などによる依存の自動更新・脆弱性検査

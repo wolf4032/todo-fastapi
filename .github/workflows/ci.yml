@@ -1,0 +1,55 @@
+# push と pull request のたびに、GitHub が用意するまっさらな Linux マシンで検査を走らせる。
+# 検査の中身は Makefile に任せ、ここには「コンテナを立てて make を呼ぶ」ことだけを書く。
+# → docs/notes/step-17-ci.md
+name: CI
+
+# on: は「いつ動かすか」。main への push と、main に向けた pull request で動く。
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# このワークフローに渡す GitHub の権限。リポジトリを読むだけで足りるので最小にする。
+permissions:
+  contents: read
+
+# jobs: の下の各ジョブは、それぞれ別のマシンで同時に動く。
+jobs:
+  check:
+    name: lint と test
+    runs-on: ubuntu-latest
+    # 何かが止まって終わらなくなっても、無料枠の実行時間を食い潰さないようにする。
+    timeout-minutes: 20
+    # steps: は上から順に1つずつ実行され、どれか1つが失敗した時点でジョブは失敗になる。
+    steps:
+      # uses: は他人が公開している部品（アクション）を使う書き方。
+      # checkout はリポジトリの中身をこのマシンに取得する公式のアクション。
+      - uses: actions/checkout@v7
+
+      # .env はコミットしていないので、雛形から作る。CI の DB は使い捨てなので雛形の値のままでよい。
+      - run: cp .env.example .env
+
+      # devtools は VS Code のための環境なので CI では立てない。サービスを列挙して3つに絞る。
+      # --wait は、db の healthcheck が通り、全サービスが起動し終わるまで待ってから終わる。
+      - run: docker compose up -d --build --wait db api web
+
+      - run: make lint
+
+      - run: make test
+
+      # 失敗したときに原因を追えるよう、コンテナのログを出しておく。
+      # if: failure() は「それまでのステップが失敗したときだけ実行する」指定。
+      - if: failure()
+        run: docker compose logs
+
+  build-prod:
+    name: prod イメージのビルド
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      # ビルドだけなら DB の接続情報は要らないが、compose.yaml の ${POSTGRES_USER} などが
+      # 未定義だと警告が出るので、雛形を置いておく。
+      - run: cp .env.example .env
+      - run: make prod-build

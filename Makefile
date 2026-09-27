@@ -1,7 +1,7 @@
-# 開発コマンドの単一窓口。将来 CI からも同じターゲットを呼ぶ。
+# 開発コマンドの単一窓口。CI（.github/workflows/ci.yml）からも同じターゲットを呼ぶ。
 # → docs/notes/step-05-app-foundation.md
 
-.PHONY: debug migrate test lint format prod-up prod-migrate prod-down
+.PHONY: debug migrate test lint format prod-build prod-up prod-migrate prod-down
 
 # --reload はリローダが子プロセスでアプリを動かす都合上、デバッガがブレークポイントを
 # 拾い損ねることがある。デバッグ時は --reload を切り、debugpy でポート待受に切り替える。
@@ -26,8 +26,8 @@ migrate:
 test:
 	docker compose exec api python -m pytest
 
-# 静的解析。api コンテナ（dev ステージ）で走らせるのは test と同じ理由で、
-# ツールのバージョンが uv.lock 由来に固定され、手元と CI で結果がずれないため。
+# 静的解析。api / web コンテナ（dev ステージ）で走らせるのは test と同じ理由で、
+# ツールのバージョンが uv.lock / package-lock.json 由来に固定され、手元と CI で結果がずれないため。
 # CI からもこのターゲットを呼べば、実行内容は1箇所の定義で済む。
 # make はレシピの各行を別々のシェルで順に実行し、どれか1行が失敗した時点で止める。
 # そのため && で繋がなくても「1つでも落ちれば make lint は失敗」になる。
@@ -36,6 +36,8 @@ lint:
 	docker compose exec api ruff check .
 	docker compose exec api ruff format --check .
 	docker compose exec api mypy
+	docker compose exec web npm run lint
+	docker compose exec web npm run typecheck
 
 # 自動修正と整形をまとめて適用する。lint との違いは「直すか、報告だけか」。
 #
@@ -54,6 +56,10 @@ format:
 # 開発用イメージ todo-fastapi-api を上書きし、DB のボリュームも共有してしまう。
 # → docs/notes/step-11-prod-image.md
 PROD_COMPOSE = docker compose -p todo-fastapi-prod -f compose.yaml -f compose.prod.yaml
+
+# 起動はせず、prod イメージがビルドできることだけを確かめる。CI から使う。
+prod-build:
+	$(PROD_COMPOSE) build
 
 # バインドマウントが無いので、コードの変更はビルドし直さない限り反映されない。
 # そのため毎回 --build を付ける。ホストの 8000 番と 3000 番を使うので、開発の api と web は先に止める。
