@@ -1,0 +1,9 @@
+# → docs/notes/step-19-https.md
+#
+# {$SITE_ADDRESS} は Caddy 自身の書き方で、起動時にコンテナの環境変数へ置き換わる。
+# 値は compose.prod.yaml の caddy.environment から渡す。
+{$SITE_ADDRESS} {
+	# 受けたリクエストを、compose ネットワークの中の web へそのまま転送する。
+	# /api/... も web に渡し、web の rewrites が api へ中継する（ADR 0005）。
+	reverse_proxy web:3000
+}

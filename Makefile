@@ -62,8 +62,9 @@ prod-build:
 	$(PROD_COMPOSE) build
 
 # バインドマウントが無いので、コードの変更はビルドし直さない限り反映されない。
-# そのため毎回 --build を付ける。ホストの 8000 番と 3000 番を使うので、開発の api と web は先に止める。
-#   docker compose stop api web
+# そのため毎回 --build を付ける。ホストの 8000 番を開発の api と取り合うので、開発の api は先に止める。
+# （web はホストに出さず caddy が 80 / 443 で受けるので、開発の web の 3000 番とはぶつからない）
+#   docker compose stop api
 prod-up:
 	$(PROD_COMPOSE) up -d --build
 

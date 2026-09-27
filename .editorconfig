@@ -28,3 +28,8 @@ trim_trailing_whitespace = false
 # Makefile はタブでないと構文エラーになる
 [Makefile]
 indent_style = tab
+
+# Caddy の整形コマンド（caddy fmt）はタブでインデントする。
+# スペースのままだと、起動時に「整形されていない」と警告が出る。
+[Caddyfile]
+indent_style = tab

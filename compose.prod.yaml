@@ -20,7 +20,40 @@ services:
       target: prod
     # api と同じく volumes も command も書かない。standalone の server.js を非 root で動かす。
     # api への中継先（http://api:8000）は next build の時点でイメージに焼かれている。
+    # ports は書かない。外からの入口は caddy に一本化し、web には caddy が
+    # compose ネットワークの中から web:3000 で繋ぐ。
+
+  # ブラウザと web の間に立つリバースプロキシ。HTTPS の証明書を Let's Encrypt から
+  # 自動で取得・更新する。本番相当の構成にだけ置き、開発では next dev に直接繋ぐ。
+  # → docs/notes/step-19-https.md
+  caddy:
+    image: caddy:2.11-alpine
+    environment:
+      # Caddy が名乗るアドレス。Caddyfile の {$SITE_ADDRESS} に入る。
+      # ドメイン名なら HTTPS（証明書の自動取得と HTTP からの転送つき）、
+      # http:// で始めればその名前の HTTP だけになる。
+      # 公開サーバーの .env でだけドメイン名を渡し、ローカルは既定の http://localhost のまま。
+      SITE_ADDRESS: ${SITE_ADDRESS:-http://localhost}
     ports:
-      # 左（ホスト側）の番号は .env の WEB_PORT で変えられる。未設定なら 3000。
-      # 公開サーバーでは 80 にして、http://<IP> だけで開けるようにする。
-      - "${WEB_PORT:-3000}:3000"
+      - "80:80"
+      - "443:443"
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
+    volumes:
+      # 取得した証明書と鍵の保存先。コンテナを作り直すたびに取り直すと、
+      # Let's Encrypt の発行回数の上限に当たる恐れがあるので、名前付きボリュームに残す。
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - web
+
+# リポジトリのファイルを、コンテナの中の指定した場所に読み取り専用で置く。
+# イメージを作らずに設定ファイルだけを渡したいときに使う。
+configs:
+  caddyfile:
+    file: ./caddy/Caddyfile
+
+volumes:
+  caddy-data:
+  caddy-config:

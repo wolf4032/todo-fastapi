@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/wolf4032/todo-fastapi/actions/workflows/ci.yml/badge.svg)](https://github.com/wolf4032/todo-fastapi/actions/workflows/ci.yml)
 
-**デモ: <http://18.177.74.102>**（認証なし・誰でも編集可。2027年2月上旬まで公開 → [公開環境](#公開環境)）
+**デモ: <https://todo-fastapi.duckdns.org>**（認証なし・誰でも編集可。2027年2月上旬まで公開 → [公開環境](#公開環境)）
 
 FastAPI + PostgreSQL + Next.js の TODO アプリ。アプリそのものより、次の3つを同時に満たす開発環境の構成を学ぶための学習用リポジトリ。
 
@@ -201,10 +201,10 @@ docker compose up -d --build -V web
 
 ### 本番相当の構成
 
-`compose.prod.yaml` を重ねた本番相当のイメージで動かす。api は uv もテストも無し、web は Next.js の standalone 出力で devDependencies もソースの `.tsx` も無し。どちらも非 root で、コードはイメージに焼いたもの。ホストの 8000 番と 3000 番を使うので、開発の `api` と `web` は先に止める。
+`compose.prod.yaml` を重ねた本番相当のイメージで動かす。api は uv もテストも無し、web は Next.js の standalone 出力で devDependencies もソースの `.tsx` も無し。どちらも非 root で、コードはイメージに焼いたもの。ブラウザからの入口には Caddy（リバースプロキシ）が立つ。ホストの 8000 番を開発の `api` と取り合うので、開発の `api` は先に止める。
 
 ```bash
-docker compose stop api web
+docker compose stop api
 ```
 
 ```bash
@@ -215,7 +215,7 @@ make prod-up
 make prod-migrate
 ```
 
-ブラウザで <http://localhost:3000> を開いて確認する。終わったら止めて、開発の構成に戻す。
+ブラウザで <http://localhost> を開いて確認する（Caddy が 80 番で受ける。ローカルでは証明書を取らないので HTTP のまま）。終わったら止めて、開発の構成に戻す。
 
 ```bash
 make prod-down
@@ -232,11 +232,13 @@ docker compose start api web
 Amazon Lightsail のサーバー1台（Ubuntu 24.04 LTS、メモリ 2GB）で、[本番相当の構成](#本番相当の構成)をそのまま動かしている。
 
 ```
-ブラウザ ──► 18.177.74.102:80 ──► web（standalone、非 root）──中継──► api ──► db
-             ファイアウォールで開けているのは 80（HTTP）と 22（SSH）だけ
+ブラウザ ──https──► todo-fastapi.duckdns.org（18.177.74.102）
+                     └─► caddy:443 ──► web（standalone、非 root）──中継──► api ──► db
+    ファイアウォールで開けているのは 443（HTTPS）・80（HTTPS への転送と証明書の取得）・22（SSH）だけ
 ```
 
-- サーバーの `.env` だけが手元と違う。`POSTGRES_PASSWORD` はランダムな値、`WEB_PORT=80`
+- ドメインは DuckDNS の無料サブドメイン。証明書は Caddy が Let's Encrypt から自動で取得・更新する（→ [step-19-https.md](docs/notes/step-19-https.md)）
+- サーバーの `.env` だけが手元と違う。`POSTGRES_PASSWORD` はランダムな値、`SITE_ADDRESS=todo-fastapi.duckdns.org`
 - api のポートは `127.0.0.1` に限定しているので、サーバーの外からは繋がらない。ブラウザからの API 呼び出しは web の中継を通る（→ [ADR 0005](docs/adr/0005-relay-api-via-rewrites.md)）
 
 ### デプロイ手順（手作業）
@@ -264,7 +266,7 @@ make prod-migrate
 ### 既知の制約
 
 - **認証が無い**: 公開 URL を知っている人は誰でも、同じ一覧を追加・編集・削除できる。画面にもその旨を表示している
-- **HTTP のみ**: 独自ドメインと HTTPS の証明書を用意していない
+- **無料のサブドメイン**: 名前は DuckDNS（個人運営の無料サービス）に頼っている。止まった場合は、登録不要の sslip.io（`18-177-74-102.sslip.io`）に切り替える
 - **CD が無い**: デプロイは上の手作業。CI（GitHub Actions）は lint・test・prod イメージのビルドまで
 - **サーバー1台に DB も同居**: DB はコンテナと名前付きボリュームで、バックアップは取っていない。デモのデータなので失っても作り直せばよい
 - **公開期限**: AWS の無料プラン（クレジット制）の期限で、2027年2月上旬にアカウントごと止まる
@@ -278,7 +280,8 @@ todo-fastapi/
 ├── .vscode/               保存時の整形・Python の解決先・デバッガ設定（コミットする）
 ├── compose.yaml           共通の定義（db / api / web）
 ├── compose.override.yaml  開発の差分（devtools・バインドマウント・--reload）。自動で読まれる
-├── compose.prod.yaml      本番相当の差分（target: prod）。-f で明示したときだけ読まれる
+├── compose.prod.yaml      本番相当の差分（target: prod、caddy）。-f で明示したときだけ読まれる
+├── caddy/Caddyfile        本番相当の入口（Caddy）の設定。HTTPS の証明書は自動で取得する
 ├── Makefile               開発コマンドの窓口。将来 CI からも同じターゲットを呼ぶ
 ├── .pre-commit-config.yaml
 ├── .editorconfig
@@ -349,7 +352,6 @@ API だけの構成（Step 12 まで）に、構成を作り直さず次を足�
 
 - [ ] ユーザー認証: `models/user.py`、`api/v1/endpoints/auth.py`（JWT）、`deps.get_current_user`、`todos.user_id` の外部キー
 - [ ] CD: CI でビルドした prod イメージをレジストリに置き、本番のコンテナを新しいイメージに差し替える
-- [ ] 独自ドメインと HTTPS
 - [ ] ECS・RDS・IaC（Terraform や CDK）による構成への移行
 - [ ] E2E テスト: Playwright を `tests/e2e/` に置く
 - [ ] リモートリポジトリへの push と、Dependabot などによる依存の自動更新・脆弱性検査
