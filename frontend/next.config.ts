@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // next build の出力に、本番の実行に要るファイルだけを集めた .next/standalone を追加する。
+  // prod イメージはこれだけを COPY し、npm ci も devDependencies も持たない。
+  // next dev には影響しない。→ docs/notes/step-16-prod-web.md
+  output: "standalone",
   // ブラウザは localhost:3000/api/... にだけリクエストを送り、web コンテナが
   // compose ネットワーク内で api コンテナへ転送する。ブラウザから見ると同一オリジンなので
   // CORS の設定が要らない。→ docs/notes/topic-same-origin-and-cors.md

@@ -56,11 +56,10 @@ format:
 PROD_COMPOSE = docker compose -p todo-fastapi-prod -f compose.yaml -f compose.prod.yaml
 
 # バインドマウントが無いので、コードの変更はビルドし直さない限り反映されない。
-# そのため毎回 --build を付ける。ホストの 8000 番を使うので、開発の api は先に止める。
-#   docker compose stop api
-# web はまだ prod ステージが無い（Step 16 で足す）ので、それまでは api だけを立てる。
+# そのため毎回 --build を付ける。ホストの 8000 番と 3000 番を使うので、開発の api と web は先に止める。
+#   docker compose stop api web
 prod-up:
-	$(PROD_COMPOSE) up -d --build api
+	$(PROD_COMPOSE) up -d --build
 
 # 本番ではマイグレーションをアプリの起動処理に混ぜず、使い捨ての別ジョブとして流す。
 # run --rm は「このコマンドのためだけにコンテナを1つ立て、終わったら消す」。

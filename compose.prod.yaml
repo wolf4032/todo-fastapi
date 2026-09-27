@@ -12,3 +12,11 @@ services:
     # （--reload なし）がそのまま使われる。実行ユーザーも Dockerfile の USER app（非 root）。
     ports:
       - "8000:8000"
+
+  web:
+    build:
+      target: prod
+    # api と同じく volumes も command も書かない。standalone の server.js を非 root で動かす。
+    # api への中継先（http://api:8000）は next build の時点でイメージに焼かれている。
+    ports:
+      - "3000:3000"
