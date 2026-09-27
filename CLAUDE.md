@@ -2,7 +2,7 @@
 
 FastAPI + PostgreSQL の TODO アプリを題材に、**ローカル環境を汚さないフルスタック開発環境**と実務相当の構成を学ぶための学習用リポジトリ。
 
-- 実装計画: [docs/plan.md](docs/plan.md)（全 12 ステップ）
+- 実装計画: [docs/plan.md](docs/plan.md)（全 16 ステップ。Step 13〜16 はフロントエンドの追加）
 - 各ステップの学習メモ: [docs/notes/](docs/notes/)
 - 設計判断の記録: [docs/adr/](docs/adr/README.md)
 

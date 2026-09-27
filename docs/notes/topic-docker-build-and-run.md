@@ -68,3 +68,46 @@ Docker は対象がデータベースなのか HTTP サーバーなのか一切�
 - `-d` を付けると起動だけしてすぐプロンプトを返す。ログは後から `docker compose logs -f <service>` で追える
 
 **ビルドが走るかどうかは `-d` と無関係。** `up` は対象イメージが存在しなければ自動でビルドするが、**一度イメージができた後は `Dockerfile` を直しても `up` だけでは自動再ビルドされない**。変更を反映するには `docker compose build <service>` または `docker compose up -d --build <service>` が必要。
+
+---
+
+## アプリの設定ファイルも「ビルド時に評価される」ことがある
+
+Step 16 で Next.js の `next.config.ts` について確認したこと。
+
+環境変数は通常、コンテナの**起動時**に渡し、アプリがその場で読む（api の DB 接続情報がそう）。だからイメージを作り直さずに値を変えられる。ところが `next.config.ts` の rewrites は `next build` の最中、つまり Dockerfile の `RUN next build` の時点で一度だけ評価され、**評価し終わった値**がビルド結果に書き込まれる。
+
+仮に次のように書いたとする。
+
+```ts
+destination: process.env.API_URL + "/api/:path*",
+```
+
+1. `docker build` の `builder` 段で `next build` が動く。この段には `API_URL` を渡していないので、`process.env.API_URL` は `undefined`
+2. 文字列の足し算が評価され、`"undefined/api/:path*"` という**ただの文字列**になる
+3. その文字列が JSON としてビルド結果（`.next/` 以下のファイル）に保存される。ここで「`process.env.API_URL` を見に行く」という式は消え、値だけが残る
+4. `compose.prod.yaml` の `environment:` で `API_URL` を渡しても、コンテナの中の Node プロセスの環境変数が増えるだけ。保存済みの文字列はもう環境変数を参照していないので、何も変わらない
+
+このように、値を実行できる形から文字列などの保存できる形に変換することを**シリアライズ**と呼ぶ。保存されるのは式ではなく、その時点の結果。写真に例えると、撮った後で被写体を変えても写真は変わらない。
+
+環境ごとに値を変えたいときは、ビルドの時点で値を渡す。
+
+```dockerfile
+ARG API_URL
+RUN API_URL=$API_URL next build
+```
+
+値はビルドを実行するときに渡す。compose なら `build.args` に書く（`docker compose up --build` も `docker compose build` も、これを読んでビルドする）。
+
+```yaml
+web:
+  build:
+    args:
+      API_URL: http://api:8000
+```
+
+compose を使わないなら `docker build --build-arg API_URL=http://api:8000 ...`。どちらも `environment:`（起動時に渡す環境変数）とは別物で、`environment:` はビルドには一切届かない。
+
+こうすると環境ごとに別のイメージをビルドすることになる。「1つのイメージをどの環境にもそのまま持っていく」形は崩れるので、変わらない値（このリポジトリではサービス名 `api`）で済むなら固定で書く方が単純。
+
+Next.js では、ブラウザ向けの `NEXT_PUBLIC_` で始まる環境変数も同じくビルド時に JS へ埋め込まれる。「環境変数なのに起動時に変えても効かない」と感じたら、まずその値がいつ評価されるかを疑う。

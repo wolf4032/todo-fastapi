@@ -26,13 +26,14 @@
 | [Step 13](step-13-nextjs-scaffold.md) | `create-next-app`、npm と uv の対応、`node_modules` をバインドマウントの内側で名前付きボリュームに載せる、`allowScripts`、Prettier/ESLint の設定、`LayoutProps` と `next typegen` |
 | [Step 14](step-14-web-container.md) | `web` コンテナ（`deps`→`dev`）、rewrites による API への中継、`node_modules`/`.next` の匿名ボリュームと `up -V`、Dark Reader による hydration mismatch |
 | [Step 15](step-15-todo-page.md) | TODO 画面、型と API クライアント、Server/Client Component の境界と hydration、サーバー側で相対 URL が使えない理由、`fetch` が 4xx/5xx で reject しない件、`async` を付けない中継関数、エラーの3分類、Strict Mode で GET が2回飛ぶ件 |
+| [Step 16](step-16-prod-web.md) | 本番相当の web（`builder`→`prod`）、`output: "standalone"`、`HOSTNAME=0.0.0.0`、コードを root 所有にして `.next/cache` だけ書けるようにした件、中継先がビルド時に確定すること、CD と ISR の違い、イメージの中身とサイズ |
 
 ## トピックノート
 
 | トピック | 内容 |
 |---|---|
 | [Docker のボリュームと権限](topic-docker-volumes.md) | マウントの3種類、永続性、ボリュームの初回作成時のコピー、匿名ボリュームが再作成時に引き継がれる件と `-V`、UID による権限、トラブルシュート |
-| [ビルド時に決まること・実行時に決まること](topic-docker-build-and-run.md) | `RUN` と `CMD` のタイミングの違い、CMD とメインプロセス、compose の `command:` との関係、healthcheck の汎用的な仕組み、`docker compose up -d` |
+| [ビルド時に決まること・実行時に決まること](topic-docker-build-and-run.md) | `RUN` と `CMD` のタイミングの違い、CMD とメインプロセス、compose の `command:` との関係、healthcheck の汎用的な仕組み、`docker compose up -d`、`next.config.ts` のようにアプリの設定がビルド時に評価される場合（シリアライズ） |
 | [async/await・並行処理](topic-async-await.md) | コルーチン、`await` が本当にブロックする範囲、並行処理と並列処理の違い、Python/JSの差、JS の Promise の resolve/reject と `.then`/`.catch`/`.finally`（渡した関数だけが値を待つ）、FastAPIでの実務上の注意 |
 | [コンテナ間ネットワークとDNS](topic-docker-networking.md) | VS Code拡張機能の実行場所、`docker compose run` のDNS別名、ゾンビコンテナ、診断コマンド、`devtools`から`api`への`curl`が繋がらない理由、ブラウザが compose ネットワークの外にいること、ログの送信元 IP で経路が分かること |
 | [Pydantic/pydantic-settingsの基礎](topic-pydantic-basics.md) | 今回追加した4パッケージの役割分担、dataclassとの違い、環境変数の大文字小文字マッチング、なぜ「Serializer」と呼ぶか |

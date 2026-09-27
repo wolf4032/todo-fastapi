@@ -10,6 +10,7 @@ ADR（Architecture Decision Record）は、設計上の判断を1件につき1�
 | [0002](0002-multistage-dockerfile-with-venv.md) | 1つの Dockerfile をマルチステージにし、依存は venv に固めて移送する | 採用 |
 | [0003](0003-run-app-in-api-container.md) | アプリは `devtools` ではなく `api` コンテナで走らせる | 採用 |
 | [0004](0004-layered-compose-files.md) | compose を共通＋環境ごとの差分の3ファイルに分ける | 採用 |
+| [0005](0005-relay-api-via-rewrites.md) | ブラウザから API へは web が中継し、同一オリジンにする | 採用 |
 
 ## 書き方
 

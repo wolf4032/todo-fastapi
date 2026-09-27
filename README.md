@@ -1,24 +1,27 @@
 # todo-fastapi
 
-FastAPI + PostgreSQL の TODO API。アプリそのものより、次の3つを同時に満たす開発環境の構成を学ぶための学習用リポジトリ。
+FastAPI + PostgreSQL + Next.js の TODO アプリ。アプリそのものより、次の3つを同時に満たす開発環境の構成を学ぶための学習用リポジトリ。
 
 1. **ホストを汚さない**: ホストに Python も Node も入れない。開発ツールもアプリもすべてコンテナの中で動かす
 2. **エディタが快適**: Dev Container に接続した VS Code で、git の差分表示・補完・波線・保存時の整形が効く
-3. **本番とずれない**: 開発・テスト・本番のイメージが同じ Dockerfile と同じ `uv.lock` から作られる
+3. **本番とずれない**: 開発・テスト・本番のイメージが同じ Dockerfile と同じ lock ファイル（`uv.lock` / `package-lock.json`）から作られる
 
-機能は TODO の CRUD API のみ。フロントエンドと認証は、構成を作り直さずに後から足せるようにしてある（→ [将来の拡張](#将来の拡張)）。
+機能は TODO の CRUD API と、それを操作する画面1枚（一覧・追加・完了切り替え・削除）。フロントエンドは、API だけの構成を作り直さずに後から足した（→ [フロントエンドの追加](#フロントエンドの追加)）。
 
 ## 構成の全体像
 
 ```
 ホスト（Mac）
- ├─ VS Code ──接続──▶ devtools   開発ツールボックス（git / uv / pre-commit / Claude Code）
- └─ docker compose ─▶ api        アプリ本体（backend/Dockerfile の dev ステージ）:8000
-                      db         PostgreSQL 17
+ ├─ VS Code ──接続──▶ devtools   開発ツールボックス（git / uv / npm / pre-commit / Claude Code）
+ ├─ docker compose ─▶ web        画面（frontend/Dockerfile の dev ステージ、next dev）:3000
+ │                    api        API（backend/Dockerfile の dev ステージ）:8000
+ │                    db         PostgreSQL 17
+ └─ ブラウザ ──▶ localhost:3000 ──▶ web ──/api/... を中継──▶ api
 ```
 
-- VS Code がつながるのは `devtools`。アプリは `api` で動く。役割を分けた理由は [ADR 0001](docs/adr/0001-devtools-toolbox.md) と [ADR 0003](docs/adr/0003-run-app-in-api-container.md)
-- 3つのコンテナは compose の同じネットワーク上にあり、サービス名（`api`、`db`）で互いに到達できる
+- VS Code がつながるのは `devtools`。アプリは `web` と `api` で動く。役割を分けた理由は [ADR 0001](docs/adr/0001-devtools-toolbox.md) と [ADR 0003](docs/adr/0003-run-app-in-api-container.md)
+- 4つのコンテナは compose の同じネットワーク上にあり、サービス名（`web`、`api`、`db`）で互いに到達できる
+- ブラウザは `localhost:3000` にだけリクエストを送り、`/api/...` は `web` が `api` へ中継する。ブラウザから見て同一オリジンになるので CORS は使わない（→ [ADR 0005](docs/adr/0005-relay-api-via-rewrites.md)）
 
 ## 必要なもの（ホスト側）
 
@@ -53,10 +56,11 @@ VS Code でフォルダを開く。
 code .
 ```
 
-コマンドパレット（`Cmd+Shift+P`）から **Dev Containers: Reopen in Container** を実行する。初回は `devtools` と `api` のイメージのビルドが走り、`db` / `api` / `devtools` の3つが起動する。続けて `postCreateCommand` が一度だけ走り、次を行う。
+コマンドパレット（`Cmd+Shift+P`）から **Dev Containers: Reopen in Container** を実行する。初回は `devtools` / `api` / `web` のイメージのビルドが走り、`db` / `api` / `web` / `devtools` の4つが起動する。続けて `postCreateCommand` が一度だけ走り、次を行う。
 
 - `backend/.venv` の作成（Pylance が import を解決するため）
 - `pre-commit install`（`git commit` 時に検査が走るようにする）
+- `frontend/node_modules` の作成（`npm ci`。TypeScript の補完と ESLint のため）
 
 起動したら、DB にテーブルを作る（ホストのターミナルで）。
 
@@ -74,7 +78,7 @@ curl -s localhost:8000/health
 curl -s localhost:8000/health/db
 ```
 
-ブラウザで <http://localhost:8000/docs> を開くと Swagger UI から API を一通り操作できる。
+ブラウザで <http://localhost:3000> を開くと TODO の画面が出る。<http://localhost:8000/docs> の Swagger UI からも API を直接操作できる。
 
 ## コマンドを実行する場所
 
@@ -83,9 +87,9 @@ curl -s localhost:8000/health/db
 | 実行する場所 | 使うもの |
 |---|---|
 | ホストのターミナル | `docker compose ...`、`make ...` |
-| VS Code のターミナル（= `devtools` の中） | `git`、`uv add`、`pre-commit`、`psql -h db`、`curl api:8000/...` |
+| VS Code のターミナル（= `devtools` の中） | `git`、`uv add`、`npm ... --prefix frontend`、`pre-commit`、`psql -h db`、`curl api:8000/...` |
 
-`devtools` から `api` を叩くときは `localhost` ではなくサービス名 `api` を使う（→ [topic-docker-networking.md](docs/notes/topic-docker-networking.md)）。
+`devtools` から `api` や `web` を叩くときは `localhost` ではなくサービス名（`api:8000`、`web:3000`）を使う（→ [topic-docker-networking.md](docs/notes/topic-docker-networking.md)）。
 
 ## よく使うコマンド
 
@@ -93,7 +97,7 @@ curl -s localhost:8000/health/db
 
 ### 起動・停止・ログ
 
-Dev Container を開けば `db` と `api` も起動するが、VS Code を使わずに起動するときはこれ。
+Dev Container を開けば `db` / `api` / `web` も起動するが、VS Code を使わずに起動するときはこれ。
 
 ```bash
 docker compose up -d
@@ -122,6 +126,16 @@ docker compose down
 | `make format` | ruff の自動修正と整形を適用する |
 
 `git commit` 時にも pre-commit が ruff 等を走らせる。
+
+フロントエンドの静的解析は VS Code のターミナル（`devtools`）で実行する。
+
+```bash
+npm run lint --prefix frontend
+```
+
+```bash
+npm run typecheck --prefix frontend
+```
 
 ### マイグレーション
 
@@ -169,12 +183,24 @@ uv add --project backend <パッケージ名>
 docker compose up -d --build api
 ```
 
-### 本番相当の構成
-
-`compose.prod.yaml` を重ねた本番相当のイメージ（uv もテストも無し、非 root、コードはイメージに焼いたもの）で動かす。ホストの 8000 番を使うので、開発の `api` は先に止める。
+フロントエンドの依存は `package.json` を手で編集せず `npm install` を使う（VS Code のターミナルで）。
 
 ```bash
-docker compose stop api
+npm install --prefix frontend <パッケージ名>
+```
+
+`web` の `node_modules` はイメージと匿名ボリュームにあるので、ホストで作り直す。`-V` を付けないと古い匿名ボリュームが引き継がれ、新しい依存が見えない（→ [step-14-web-container.md](docs/notes/step-14-web-container.md)）。
+
+```bash
+docker compose up -d --build -V web
+```
+
+### 本番相当の構成
+
+`compose.prod.yaml` を重ねた本番相当のイメージで動かす。api は uv もテストも無し、web は Next.js の standalone 出力で devDependencies もソースの `.tsx` も無し。どちらも非 root で、コードはイメージに焼いたもの。ホストの 8000 番と 3000 番を使うので、開発の `api` と `web` は先に止める。
+
+```bash
+docker compose stop api web
 ```
 
 ```bash
@@ -185,8 +211,14 @@ make prod-up
 make prod-migrate
 ```
 
+ブラウザで <http://localhost:3000> を開いて確認する。終わったら止めて、開発の構成に戻す。
+
 ```bash
 make prod-down
+```
+
+```bash
+docker compose start api web
 ```
 
 開発とはプロジェクト名（`-p todo-fastapi-prod`）を分けているので、イメージも DB のボリュームも開発とは別になる（→ [step-11-prod-image.md](docs/notes/step-11-prod-image.md)）。
@@ -197,7 +229,7 @@ make prod-down
 todo-fastapi/
 ├── .devcontainer/         devtools のイメージと Dev Container の接続設定
 ├── .vscode/               保存時の整形・Python の解決先・デバッガ設定（コミットする）
-├── compose.yaml           共通の定義（db / api）
+├── compose.yaml           共通の定義（db / api / web）
 ├── compose.override.yaml  開発の差分（devtools・バインドマウント・--reload）。自動で読まれる
 ├── compose.prod.yaml      本番相当の差分（target: prod）。-f で明示したときだけ読まれる
 ├── Makefile               開発コマンドの窓口。将来 CI からも同じターゲットを呼ぶ
@@ -205,7 +237,7 @@ todo-fastapi/
 ├── .editorconfig
 ├── .env.example           .env の雛形（.env 自体はコミットしない）
 ├── docs/
-│   ├── plan.md            全 12 ステップの実装計画
+│   ├── plan.md            全 16 ステップの実装計画
 │   ├── adr/               設計判断の記録
 │   └── notes/             ステップごとの学習メモと、ステップをまたぐ一般知識
 └── backend/
@@ -225,6 +257,14 @@ todo-fastapi/
     └── tests/
         ├── unit/          DB を使わないテスト
         └── integration/   API を実際の DB まで通すテスト
+└── frontend/
+    ├── Dockerfile         base → deps → dev / builder → prod の5段
+    ├── package.json       依存と npm スクリプト（lint / typecheck）
+    ├── package-lock.json  依存の厳密なバージョン。dev も prod もここから作る
+    ├── next.config.ts     /api/... の中継（rewrites）と standalone 出力
+    ├── app/               ページ（App Router）。page.tsx が TODO 画面
+    ├── components/        Client Component（todo-app.tsx）
+    └── lib/               API の型と、fetch を包んだ API クライアント
 ```
 
 `app/` は「エンドポイント（HTTP の関心事）→ crud（DB の関心事）→ models（テーブル定義）」の順に依存する。
@@ -244,25 +284,23 @@ todo-fastapi/
 
 ## ドキュメント
 
-- [docs/plan.md](docs/plan.md): 全 12 ステップの実装計画
+- [docs/plan.md](docs/plan.md): 全 16 ステップの実装計画（Step 13〜16 はフロントエンドの追加）
 - [docs/adr/](docs/adr/README.md): 設計判断の記録（なぜこの構成なのか）
 - [docs/notes/](docs/notes/README.md): 各ステップで扱った内容と、つまずきの記録
 
+## フロントエンドの追加
+
+API だけの構成（Step 12 まで）に、構成を作り直さず次を足した（Step 13〜16）。
+
+1. **`frontend/` を `backend/` と並べた**: ビルドコンテキストはサービスごとに分けているので、フロントのファイルは `api` のイメージから見えない
+2. **`devtools` の Node をそのまま使った**: Claude Code のために入れていた Node の Feature で足りた
+3. **`node_modules` はコンテナごとに別に持つ**: `devtools` は名前付きボリューム（`postCreateCommand` の `npm ci`）、`web` はイメージと匿名ボリューム。backend の `backend/.venv` と `/opt/venv` と同じ構図で、どちらも同じ `package-lock.json` から作る（→ [step-13-nextjs-scaffold.md](docs/notes/step-13-nextjs-scaffold.md)）
+4. **compose に `web` を足した**: 共通の定義は `compose.yaml`、バインドマウントと `next dev` は `compose.override.yaml`、standalone 出力の prod イメージは `compose.prod.yaml`（→ [step-14-web-container.md](docs/notes/step-14-web-container.md)、[step-16-prod-web.md](docs/notes/step-16-prod-web.md)）
+5. **CORS ではなく中継にした**: Next.js の rewrites で `/api/...` を `api` へ転送し、同一オリジンにした（→ [ADR 0005](docs/adr/0005-relay-api-via-rewrites.md)）
+
 ## 将来の拡張
 
-### フロントエンドを追加する手順
-
-構成は作り直さず、次を足す。
-
-1. **`frontend/` を作る**: `backend/` と並べる。ビルドコンテキストはサービスごとに分けるので、フロントのファイルは `api` のイメージから見えない
-2. **`devtools` に Node を用意する**: `devcontainer.json` の `features` に `ghcr.io/devcontainers/features/node:1` を置く。**Claude Code のために既に入っている**ので、必要ならバージョンを指定するだけでよい
-3. **`node_modules` は名前付きボリュームに載せる**: `frontend/node_modules` をバインドマウントのままにすると、ホスト（macOS）とコンテナ（Linux）でネイティブバイナリが食い違い、ファイル数が多いぶん同期も遅い。`devtools` 側にもこのボリュームをマウントし、`postCreateCommand` で `npm ci` する（波線を出さないために、接続先の `devtools` にも `node_modules` が要る）。ボリュームは root 所有で作られるので、所有者に注意する（→ [topic-docker-volumes.md](docs/notes/topic-docker-volumes.md)）
-4. **compose に `web` を足す**: 共通の定義を `compose.yaml` に、開発時の差分（バインドマウント・開発サーバー）を `compose.override.yaml` に、本番の差分を `compose.prod.yaml` に書く。本番はビルド済みの静的ファイルを配信する独立したイメージにする
-5. **CORS を有効にする**: `backend/app/core/config.py` の `cors_allow_origins` に許可するオリジンを渡し、`main.py` で CORS ミドルウェアを登録する
-
-### その他の TODO
-
 - [ ] ユーザー認証: `models/user.py`、`api/v1/endpoints/auth.py`（JWT）、`deps.get_current_user`、`todos.user_id` の外部キー
-- [ ] CI: GitHub Actions から `make lint` / `make test` を呼び、`--target prod` でイメージをビルドする
-- [ ] E2E テスト: フロント追加時に Playwright を `tests/e2e/` に置く
+- [ ] CI/CD: GitHub Actions から `make lint` / `make test` とフロントエンドの `lint` / `typecheck` を呼び、`--target prod` で api と web のイメージをビルドして、本番のコンテナを新しいイメージに差し替える
+- [ ] E2E テスト: Playwright を `tests/e2e/` に置く
 - [ ] リモートリポジトリへの push と、Dependabot などによる依存の自動更新・脆弱性検査
